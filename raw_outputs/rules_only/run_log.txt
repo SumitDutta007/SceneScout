@@ -1,0 +1,25 @@
+Parsed 50 episodes, 3727 cues.
+Rule candidates: 130
+
+Top 15 promos (rules):
+  1. E4 00:03.20-00:21.80 + E5 01:16.00-01:50.50  53.1s  score 0.73  Medium shot of Gerald stepping forward from his pew with a smug, sneer
+  2. E36 02:36.50-03:20.75                     44.2s  score 0.83  Profile shot of Alexander as dark realization settles over his face, t
+  3. E29 00:56.60-01:09.50 + E38 00:55.50-01:27.91  45.3s  score 0.79  Close-up of Juliana screaming back in raw outrage | Juliana: "You are 
+  4. E2 00:00.00-00:15.80 + E2 01:16.50-01:50.00  49.3s  score 0.72  Juliana gasps softly in heartbreak, her eyes wide and brimming with te
+  5. E1 00:39.00-01:19.00                      40.0s  score 0.68  Close-up on the Lady in Gold Gown beaming with cruel triumph | Clariss
+  6. E12 00:11.80-01:09.50                     57.7s  score 0.65  Close-up of Juliana glaring back with unwavering conviction | Juliana:
+  7. E31 01:10.50-01:20.50 + E32 01:59.50-02:34.38  44.9s  score 0.73  Medium shot of Catherine sneering down at her | Catherine: "A scarred 
+  8. E37 01:43.50-02:36.47                     53.0s  score 0.73  Full shot of Juliana using her bare hands against the slimy stone floo
+  9. E3 01:36.50-02:25.75                      49.2s  score 0.65  Medium close-up on the Noble Matriarch shrieking in exasperation from 
+ 10. E28 01:22.30-02:18.50                     56.2s  score 0.68  Medium shot of Juliana being dragged further into the doorway, staring
+ 11. E45 01:26.50-02:01.75                     35.2s  score 0.72  A Catholic Bishop in dark vestments steps through the cathedral doors 
+ 12. E42 00:23.40-00:30.40 + E43 01:21.00-01:54.96  41.0s  score 0.75  Close-up on Rupert, veins bulging in his neck as his composure shatter
+ 13. E16 00:25.80-01:23.19                     57.4s  score 0.70  Alexander deflects the strike with his forearm, drives a swift counter
+ 14. E15 00:46.50-01:26.00                     39.5s  score 0.68  The Thug with Cap violently shoves Juliana back with both hands; she c
+ 15. E18 02:14.50-03:12.00                     57.5s  score 0.65  Wide shot of the cottage completely consumed by towering flames agains
+
+Wrote raw_outputs\rules_only\promos.json, raw_outputs\rules_only\report.md, raw_outputs\rules_only\viewer.html
+
+real	0m3.847s
+user	0m0.015s
+sys	0m0.016s

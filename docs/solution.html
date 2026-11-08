@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<title>Promo Finder: Solution</title>
+<style>
+@page { size: A4; margin: 13mm 14mm; }
+* { box-sizing: border-box; }
+body { font: 9.4pt/1.36 "Segoe UI", Calibri, Arial, sans-serif; color: #1b1d22; margin: 0; }
+h1 { font-size: 15pt; margin: 0 0 1mm; }
+h2 { font-size: 10.6pt; margin: 3.2mm 0 1mm; padding-bottom: .6mm; border-bottom: 1px solid #c9ced8; color: #14306b; }
+p { margin: 0 0 1.4mm; }
+ul { margin: 0 0 1.4mm; padding-left: 4.5mm; }
+li { margin: 0 0 .5mm; }
+.meta { color: #555; font-size: 9pt; margin-bottom: 1.5mm; }
+.ph { background: #fff3b0; padding: 0 2px; }
+table { border-collapse: collapse; width: 100%; margin: .5mm 0 1.6mm; font-size: 8.7pt; }
+th, td { border: 1px solid #d3d7df; padding: .7mm 1.4mm; text-align: left; vertical-align: top; }
+th { background: #eef1f6; font-weight: 600; }
+code { font-family: Consolas, monospace; font-size: 8.5pt; background: #f2f3f6; padding: 0 2px; }
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 5mm; }
+.note { border-left: 3px solid #d08a00; background: #fff8e8; padding: 1mm 2mm; margin: 1mm 0 1.6mm; }
+.pb { break-before: page; }
+b { font-weight: 600; }
+</style></head><body>
+
+<h1>Promo Finder: picking promo clips from a microdrama screenplay</h1>
+<div class="meta"><span class="ph">[Name · Roll no. · Branch]</span> &nbsp;·&nbsp; Problem 1 &nbsp;·&nbsp; Prototype + raw outputs: <span class="ph">[GitHub link]</span></div>
+
+<h2>1. The problem, and why I picked it</h2>
+<p>Today an editor watches every episode of every show to find promo moments, and a new show ships every week. That cost grows with the catalogue and repeats forever, so it is the highest-leverage place to automate. The input also suits a tool unusually well: the scripts are <b>timestamped cue by cue</b> (camera, action, sound, dialogue with emotion tags), so the tool can return exact cut points an editor can act on, not vague suggestions. And the output is checkable, because every pick traces back to script lines.</p>
+
+<h2>2. Assumptions (where the brief was silent)</h2>
+<ul>
+<li><b>Script time ≈ final-cut time</b>, within a second or two. Boundaries should be re-snapped on the video before cutting.</li>
+<li>A promo is 20–60s. The hook sits in the <b>first 3s of segment 1</b>, the cliffhanger in the <b>last ~4–6s</b>. Stitched promos are 2–3 segments in story order. Cuts land only on a shot change, never mid-line.</li>
+<li>The output is a <b>shortlist for an editor</b> (15 per show), not auto-posted clips. The goal is <b>new-viewer acquisition</b>, so early-episode entry points rank higher.</li>
+<li>The title already reveals the twist ("He was a Duke"), so that reveal isn't a spoiler. Late-arc outcomes (ep 39+) are.</li>
+<li>Every show arrives in this same script format.</li>
+</ul>
+
+<h2>3. How it works</h2>
+<p><b>Parse → legal cut points → score → generate candidates → (Claude judge) → select → order → quality flags → JSON / report / HTML viewer.</b> One command: <code>python -m promo_finder "data/&lt;show&gt;" --mode auto</code>.</p>
+<table>
+<tr><th style="width:17%">Who does it</th><th>What</th><th style="width:30%">Why there</th></tr>
+<tr><td><b>Code / rules</b></td><td>Parse 3,727 cues. Legal cuts only (shot boundaries, never inside a line). Enforce 20–60s and story order. Hook / cliffhanger / standalone / premise scores from cue types, delivery tags, music notes, threat and question lines, interruptions. Diversity rules (≤2 per episode, no duplicate openings, stitches ≤⅓). Posting-order rules (entry-point bonus, spoiler cost, rotate hook types).</td><td>These must be deterministic, free and auditable. Correctness here is not a judgment call.</td></tr>
+<tr><td><b>Claude</b> (<code>claude-opus-5-5</code>, structured JSON)</td><td>(1) Per episode: read the full transcript plus the rule candidates, then refine boundaries or reject candidates, with a reason and a cold-viewer test. (2) Cross-episode stitching. (3) Posting order and strategy. Claude answers with <b>cue IDs, never timestamps</b>. Code maps them back to the script, snaps them to legal cuts and drops anything invalid (logged).</td><td>"Would a scrolling stranger stop?" and "is the question still open?" are about meaning, which rules can't read (see §5).</td></tr>
+<tr><td><b>Editor</b></td><td>Reviews 15 picks in <code>viewer.html</code>, with script excerpts and the hook and cliffhanger windows highlighted. Cuts the video, and logs accepted or rejected picks to <code>gold.json</code>.</td><td>The final cut and taste stay human. Their decisions become the evaluation set.</td></tr>
+</table>
+
+<h2>4. Scale and cost</h2>
+<div class="two"><div>
+<ul>
+<li><b>Rules-only:</b> <b>3.8s</b> for a 50-episode show on a laptop. $0. No dependencies.</li>
+<li><b>Hybrid:</b> about 52 Claude calls per show (50 episode judges, 1 stitch, 1 rank), 6 in parallel. The show summary is prompt-cached across calls, and responses are disk-cached, so re-runs are free. <i>Estimated</i> at about 300k input and 250k output tokens per show: <b>≈$6 on Opus 5.5</b>, <b>≈$0.15 on Haiku 5.5</b> (<code>--model</code>). The tool prints <i>measured</i> token use and cost per run. Nothing is latency-sensitive, so the Batch API would halve this.</li>
+</ul></div><div>
+<ul>
+<li><b>Editor time:</b> from watching ~100 min of footage per show to reviewing 15 shortlisted clips (≈20–30 min, my assumption).</li>
+<li><b>What breaks at catalogue scale:</b> main cast is already derived per show from dialogue counts, but <b>speaker aliases</b> (<code>THE FORMER GROOM</code>→Gerald) are a hand-made map; Claude could resolve them. <b>Scripts that don't describe the music</b> will score far lower on cliffhangers. <b>A new script format</b> needs a new parser.</li>
+</ul></div></div>
+
+<h2 class="pb">5. How I know it's good, and where it fails</h2>
+<div class="note"><b>Honest status:</b> every result here comes from the <b>rule engine</b>. The Claude layer is built and tested against a mocked API, but has <b>not been run on real model output</b> (no API key on this machine), so it is unproven.</div>
+<p><b>Automated checks (9 tests, all passing):</b> all 50 episodes parse; ep 6's missing scene end is repaired; no cut point splits a line; every candidate is 20–60s and in story order; the ep 3 proposal cliffhanger is found; Claude output with bad cue IDs or bad lengths is rejected.</p>
+<p><b>Hand audit:</b> I read the script behind all 15 picks. <b>9 are usable as-is, 6 have a real problem:</b></p>
+<table>
+<tr><th style="width:21%">Bad pick</th><th>What's wrong</th><th style="width:30%">Root cause</th></tr>
+<tr><td>#1 Ep 4 + Ep 5</td><td>Ends on "Come." as the couple walk off: the story is at rest, not a cliffhanger. Ranked first.</td><td>Trusts the writer's music note ("orchestral swell") over the story.</td></tr>
+<tr><td>#3 Ep 29 + Ep 38</td><td>Ends on a warm smile, and joins pieces 9 episodes apart.</td><td>Same; emotional direction across the join isn't modelled.</td></tr>
+<tr><td>#13 Ep 16, #15 Ep 18</td><td>The best beat is buried mid-clip. The fire is 2s of flames, then 50s of embrace.</td><td>Only the two ends of a window are scored, not its peak or pacing.</td></tr>
+<tr><td>#6 Ep 12</td><td>Opens mid-argument ("Then someone put it there!": what?).</td><td>Shallow opening-context check. It is also wrongly flagged as a weak cliffhanger.</td></tr>
+<tr><td>#12 Ep 42–43</td><td>Ends on "Lord Sterling", someone a cold viewer has never met.</td><td>The unknown-name check only covers the top 10 speakers.</td></tr>
+</table>
+<p><b>Misses:</b> the <b>ep 13 blackthorn crawl</b> (cliffhanger score 0.00: "she hasn't found the ring yet" isn't a keyword); the <b>ep 26–27 ring reveal</b> (0.21–0.29: the hook is meaning, not words); the <b>ep 24 riding-crop strike</b> and the <b>ep 41 explosion</b> (found, but out-ranked). Tuning against the scripts already fixed several false positives: "fire" matching "fireplace", "tear" matching tears, props counted as violence, unrelated plots joined in a stitch, and stitches taking 10 of 15 slots.</p>
+<p><b>Which to post first (my read):</b> ① Ep 1 00:39.00–00:54.60 + 01:47.40–02:17.00 (sister takes the groom; the whole premise in 45s) → ② Ep 3 01:00.00–01:06.00 + 01:50.80–02:25.75 (dragged out, then a stranger kneels and proposes, answer withheld) → ③ Ep 12 00:56.80–01:09.50 + Ep 13 00:47.00–01:29.00 (gallows ultimatum into the barehanded crawl) → ④ Ep 36 02:36.50–03:20.75 ("their dead Duke is coming home") → ⑤ Ep 31 + 32 (hot iron). <b>Hold</b> ep 42–45 for retargeting: they spoil the arc. The tool generates all of these, but not all in its top 15, and I paired ③ by hand. That gap is exactly what the Claude judge and a gold set must close.</p>
+<p><b>How "good" would be proven:</b> (1) An editor logs the promos they actually cut for 5–10 past shows. <code>--gold</code> then reports precision@k and temporal IoU for every change. (2) Track the editor's weekly accept rate on new shows. (3) The real judge is promo performance: 3-second hold rate and click-through to ep 1. Feed the winners back as examples.</p>
+
+</body></html>

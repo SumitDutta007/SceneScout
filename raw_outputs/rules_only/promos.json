@@ -1,0 +1,1420 @@
+{
+  "meta": {
+    "show": "I Married a Broken Soldier. He was a Duke",
+    "mode": "rules",
+    "episodes": 50,
+    "strategy": "",
+    "diagnostics": {
+      "episodes": 50,
+      "candidates": 130,
+      "selected": 15,
+      "episodes_with_candidates": 50,
+      "episodes_used_in_selection": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        12,
+        15,
+        16,
+        18,
+        28,
+        29,
+        31,
+        32,
+        36,
+        37,
+        38,
+        42,
+        43,
+        45
+      ],
+      "episodes_never_used": [
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        13,
+        14,
+        17,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        30,
+        33,
+        34,
+        35,
+        39,
+        40,
+        41,
+        44,
+        46,
+        47,
+        48,
+        49,
+        50
+      ],
+      "weak_episodes": [
+        7,
+        9,
+        17,
+        19,
+        21,
+        24,
+        25,
+        26,
+        30,
+        34,
+        39,
+        40,
+        48,
+        49,
+        50
+      ],
+      "hook_trigger_words": {
+        "sneering": 2,
+        "glare": 1,
+        "screaming": 1,
+        "gasps": 1,
+        "tears spill": 1,
+        "riding crop": 1,
+        "drag": 1,
+        "shrieking": 1,
+        "dragged": 1,
+        "slam": 1,
+        "shatters": 1,
+        "strike": 1,
+        "shoves": 1,
+        "flames": 1
+      },
+      "visual_only_hooks": 0,
+      "stitched_selected": 5,
+      "late_season_selected": 2
+    },
+    "llm_log": []
+  },
+  "promos": [
+    {
+      "id": "P01",
+      "rank": 1,
+      "kind": "stitched",
+      "source": "rules",
+      "duration": 53.1,
+      "segments": [
+        {
+          "episode": 4,
+          "start": 3.2,
+          "end": 21.8,
+          "cue_ids": [
+            "E04-C003",
+            "E04-C004",
+            "E04-C005",
+            "E04-C006",
+            "E04-C007",
+            "E04-C008",
+            "E04-C009",
+            "E04-C010",
+            "E04-C011",
+            "E04-C012",
+            "E04-C013",
+            "E04-C014",
+            "E04-C015",
+            "E04-C016"
+          ],
+          "scene_heading": "INT. CHAPEL – CONTINUOUS",
+          "start_ts": "00:03.20",
+          "end_ts": "00:21.80",
+          "duration": 18.6
+        },
+        {
+          "episode": 5,
+          "start": 76.0,
+          "end": 110.5,
+          "cue_ids": [
+            "E05-C043",
+            "E05-C044",
+            "E05-C045",
+            "E05-C046",
+            "E05-C047",
+            "E05-C048",
+            "E05-C049",
+            "E05-C050",
+            "E05-C051",
+            "E05-C052",
+            "E05-C053",
+            "E05-C054",
+            "E05-C055",
+            "E05-C056",
+            "E05-C057",
+            "E05-C058",
+            "E05-C059",
+            "E05-C060",
+            "E05-C061"
+          ],
+          "scene_heading": "EXT. CATHEDRAL STEPS – DAY",
+          "start_ts": "01:16.00",
+          "end_ts": "01:50.50",
+          "duration": 34.5
+        }
+      ],
+      "hook": "Medium shot of Gerald stepping forward from his pew with a smug, sneering grin | Gerald: \"Look at him.\"",
+      "cliffhanger": "Alexander: \"Come.\" | Rain gently pattering on cobblestones beneath a sweeping, melancholic orchestral swell that slowly fades to black",
+      "why": "Opens on emotional beat ('sneering'); cuts on tension sting ('swell'); states the premise (bride, nobody, worthless).",
+      "post_reason": "Humiliation hook; entry point: the viewer lands on ep 1–5 and binges forward; states the premise on screen; stitched: compresses the setup→twist arc into one clip; hard cliffhanger ending.",
+      "scores": {
+        "hook": 0.65,
+        "cliff": 0.6,
+        "standalone": 0.936,
+        "premise": 1.0,
+        "total": 0.735,
+        "final": 0.735,
+        "post_value": 0.865
+      },
+      "reasons": {
+        "hook": [
+          "emotional beat ('sneering')",
+          "short punchy opening line",
+          "charged line ('nobody')",
+          "hot delivery (Mocking)"
+        ],
+        "cliff": [
+          "tension sting ('swell')",
+          "episode's own cliffhanger ending"
+        ],
+        "standalone": [],
+        "premise": [
+          "states the premise (bride, nobody, worthless)",
+          "states the premise (beggar, wife)"
+        ],
+        "stitch": [
+          "shared characters: Gerald, Juliana"
+        ]
+      },
+      "flags": [
+        "location jump: 'INT. CHAPEL – CONTINUOUS' → 'EXT. CATHEDRAL STEPS – DAY'"
+      ],
+      "llm": {}
+    },
+    {
+      "id": "P02",
+      "rank": 2,
+      "kind": "single",
+      "source": "rules",
+      "duration": 44.25,
+      "segments": [
+        {
+          "episode": 36,
+          "start": 156.5,
+          "end": 200.75,
+          "cue_ids": [
+            "E36-C096",
+            "E36-C097",
+            "E36-C098",
+            "E36-C099",
+            "E36-C100",
+            "E36-C101",
+            "E36-C102",
+            "E36-C103",
+            "E36-C104",
+            "E36-C105",
+            "E36-C106",
+            "E36-C107",
+            "E36-C108",
+            "E36-C109",
+            "E36-C110",
+            "E36-C111",
+            "E36-C112",
+            "E36-C113",
+            "E36-C114",
+            "E36-C115",
+            "E36-C116",
+            "E36-C117",
+            "E36-C118",
+            "E36-C119",
+            "E36-C120"
+          ],
+          "scene_heading": "INT. SECLUDED CABIN – NIGHT",
+          "start_ts": "02:36.50",
+          "end_ts": "03:20.75",
+          "duration": 44.25
+        }
+      ],
+      "hook": "Profile shot of Alexander as dark realization settles over his face, turning to a grim, predatory glare | Alexander: \"They are marrying in two days...\"",
+      "cliffhanger": "Alexander: \"...their dead Duke is coming home.\" | Alexander stares resolutely ahead into the dark, snowy woods as the camera holds on his grim, determined expression before cutting to black",
+      "why": "Opens on emotional beat ('glare'); cuts on tension sting ('ominous'); states the premise (duke, marrying, wedding, wife).",
+      "post_reason": "Humiliation hook; late-season payoff: hold for retargeting viewers who already know the premise; states the premise on screen; hard cliffhanger ending.",
+      "scores": {
+        "hook": 0.65,
+        "cliff": 1.0,
+        "standalone": 0.607,
+        "premise": 1.0,
+        "total": 0.829,
+        "final": 0.829,
+        "post_value": 0.849
+      },
+      "reasons": {
+        "hook": [
+          "emotional beat ('glare')",
+          "short punchy opening line",
+          "charged line ('marrying')",
+          "hot delivery (Simmering with Fury)"
+        ],
+        "cliff": [
+          "tension sting ('ominous')",
+          "episode's own cliffhanger ending",
+          "ends on a threat/reveal line ('dead')",
+          "cut lands on an interruption ('sting')"
+        ],
+        "standalone": [
+          "first line leans on earlier context ('They')",
+          "references earlier events"
+        ],
+        "premise": [
+          "states the premise (duke, marrying, wedding, wife)"
+        ]
+      },
+      "flags": [
+        "context risk: may confuse a viewer who hasn't seen the show",
+        "names an off-screen character: Juliana"
+      ],
+      "llm": {}
+    },
+    {
+      "id": "P03",
+      "rank": 3,
+      "kind": "stitched",
+      "source": "rules",
+      "duration": 45.31,
+      "segments": [
+        {
+          "episode": 29,
+          "start": 56.6,
+          "end": 69.5,
+          "cue_ids": [
+            "E29-C034",
+            "E29-C035",
+            "E29-C036",
+            "E29-C037",
+            "E29-C038",
+            "E29-C039",
+            "E29-C040",
+            "E29-C041"
+          ],
+          "scene_heading": "INT. DUNGEON CORRIDOR – CONTINUOUS",
+          "start_ts": "00:56.60",
+          "end_ts": "01:09.50",
+          "duration": 12.9
+        },
+        {
+          "episode": 38,
+          "start": 55.5,
+          "end": 87.91,
+          "cue_ids": [
+            "E38-C035",
+            "E38-C036",
+            "E38-C037",
+            "E38-C038",
+            "E38-C039",
+            "E38-C040",
+            "E38-C041",
+            "E38-C042",
+            "E38-C043",
+            "E38-C044",
+            "E38-C045",
+            "E38-C046",
+            "E38-C047",
+            "E38-C048",
+            "E38-C049",
+            "E38-C050",
+            "E38-C051",
+            "E38-C052",
+            "E38-C053",
+            "E38-C054",
+            "E38-C055",
+            "E38-C056"
+          ],
+          "scene_heading": "INT. DUNGEON CELL – DAY",
+          "start_ts": "00:55.50",
+          "end_ts": "01:27.91",
+          "duration": 32.41
+        }
+      ],
+      "hook": "Close-up of Juliana screaming back in raw outrage | Juliana: \"You are doing this because I saved the Duchess!\"",
+      "cliffhanger": "Juliana: \"Alexander...\" | Juliana grips the bars tightly, her lips curving into a warm, defiant smile as she whispers her husband's name",
+      "why": "Opens on on-screen shock ('screaming'); cuts on tension sting ('dramatic'); states the premise (duchess).",
+      "post_reason": "Reveal hook; late-season payoff: hold for retargeting viewers who already know the premise; states the premise on screen; stitched: compresses the setup→twist arc into one clip; hard cliffhanger ending.",
+      "scores": {
+        "hook": 0.87,
+        "cliff": 1.0,
+        "standalone": 0.817,
+        "premise": 0.75,
+        "total": 0.79,
+        "final": 0.79,
+        "post_value": 0.788
+      },
+      "reasons": {
+        "hook": [
+          "on-screen shock ('screaming')",
+          "charged line ('duchess')",
+          "hot delivery (Enraged)"
+        ],
+        "cliff": [
+          "tension sting ('dramatic')",
+          "ending camera beat ('cut to black')",
+          "episode's own cliffhanger ending",
+          "line cut off mid-thought",
+          "cut lands on an interruption ('strikes')"
+        ],
+        "standalone": [],
+        "premise": [
+          "states the premise (duchess)",
+          "states the premise (husband, wedding)"
+        ],
+        "stitch": [
+          "shared characters: Juliana"
+        ]
+      },
+      "flags": [
+        "location jump: 'INT. DUNGEON CORRIDOR – CONTINUOUS' → 'INT. DUNGEON CELL – DAY'",
+        "names an off-screen character: Alexander",
+        "stitch spans 9 episodes: check costume/injury continuity"
+      ],
+      "llm": {}
+    },
+    {
+      "id": "P04",
+      "rank": 4,
+      "kind": "stitched",
+      "source": "rules",
+      "duration": 49.3,
+      "segments": [
+        {
+          "episode": 2,
+          "start": 0.0,
+          "end": 15.8,
+          "cue_ids": [
+            "E02-C000",
+            "E02-C001",
+            "E02-C002",
+            "E02-C003",
+            "E02-C004",
+            "E02-C005",
+            "E02-C006",
+            "E02-C007",
+            "E02-C008",
+            "E02-C009",
+            "E02-C010",
+            "E02-C011"
+          ],
+          "scene_heading": "INT. CATHEDRAL – CONTINUOUS",
+          "start_ts": "00:00.00",
+          "end_ts": "00:15.80",
+          "duration": 15.8
+        },
+        {
+          "episode": 2,
+          "start": 76.5,
+          "end": 110.0,
+          "cue_ids": [
+            "E02-C055",
+            "E02-C056",
+            "E02-C057",
+            "E02-C058",
+            "E02-C059",
+            "E02-C060",
+            "E02-C061",
+            "E02-C062",
+            "E02-C063",
+            "E02-C064",
+            "E02-C065",
+            "E02-C066",
+            "E02-C067",
+            "E02-C068",
+            "E02-C069",
+            "E02-C070",
+            "E02-C071",
+            "E02-C072",
+            "E02-C073"
+          ],
+          "scene_heading": "INT. CATHEDRAL – CONTINUOUS",
+          "start_ts": "01:16.50",
+          "end_ts": "01:50.00",
+          "duration": 33.5
+        }
+      ],
+      "hook": "Juliana gasps softly in heartbreak, her eyes wide and brimming with tears | Gerald: \"I cannot marry you, Juliana.\"",
+      "cliffhanger": "Juliana: \"...but I will not leave it believing I was the one who should be ashamed.\" | Juliana breathes with steady resolve, holding her head high as the solemn orchestral score swells into the final beat",
+      "why": "Opens on emotional beat ('gasps'); cuts on tension sting ('score swells'); states the premise (marry, plain).",
+      "post_reason": "Humiliation hook; entry point: the viewer lands on ep 1–5 and binges forward; states the premise on screen; stitched: compresses the setup→twist arc into one clip; hard cliffhanger ending.",
+      "scores": {
+        "hook": 0.65,
+        "cliff": 0.65,
+        "standalone": 0.946,
+        "premise": 0.75,
+        "total": 0.724,
+        "final": 0.724,
+        "post_value": 0.842
+      },
+      "reasons": {
+        "hook": [
+          "emotional beat ('gasps')",
+          "short punchy opening line",
+          "charged line ('marry')",
+          "hot delivery (Cold)"
+        ],
+        "cliff": [
+          "tension sting ('score swells')",
+          "episode's own cliffhanger ending"
+        ],
+        "standalone": [],
+        "premise": [
+          "states the premise (marry, plain)",
+          "states the premise (husband)"
+        ],
+        "stitch": [
+          "shared characters: Clarissa, Gerald, Juliana"
+        ]
+      },
+      "flags": [],
+      "llm": {}
+    },
+    {
+      "id": "P05",
+      "rank": 5,
+      "kind": "single",
+      "source": "rules",
+      "duration": 40.0,
+      "segments": [
+        {
+          "episode": 1,
+          "start": 39.0,
+          "end": 79.0,
+          "cue_ids": [
+            "E01-C025",
+            "E01-C026",
+            "E01-C027",
+            "E01-C028",
+            "E01-C029",
+            "E01-C030",
+            "E01-C031",
+            "E01-C032",
+            "E01-C033",
+            "E01-C034",
+            "E01-C035",
+            "E01-C036",
+            "E01-C037",
+            "E01-C038",
+            "E01-C039",
+            "E01-C040",
+            "E01-C041",
+            "E01-C042",
+            "E01-C043",
+            "E01-C044",
+            "E01-C045",
+            "E01-C046",
+            "E01-C047",
+            "E01-C048",
+            "E01-C049",
+            "E01-C050",
+            "E01-C051"
+          ],
+          "scene_heading": "INT. CATHEDRAL – DAY",
+          "start_ts": "00:39.00",
+          "end_ts": "01:19.00",
+          "duration": 40.0
+        }
+      ],
+      "hook": "Close-up on the Lady in Gold Gown beaming with cruel triumph | Clarissa: \"Because he is marrying me.\"",
+      "cliffhanger": "Clarissa: \"Long enough to know he was never going to marry you.\" | Medium two-shot of the Lady in Gold Gown and Gerald looking together down at Juliana",
+      "why": "Opens on emotional beat ('tears spill'); cuts on ends on a threat/reveal line ('never'); states the premise (husband, marry, marrying, sister).",
+      "post_reason": "Humiliation hook; entry point: the viewer lands on ep 1–5 and binges forward; states the premise on screen.",
+      "scores": {
+        "hook": 0.65,
+        "cliff": 0.25,
+        "standalone": 1.0,
+        "premise": 1.0,
+        "total": 0.682,
+        "final": 0.682,
+        "post_value": 0.812
+      },
+      "reasons": {
+        "hook": [
+          "emotional beat ('tears spill')",
+          "short punchy opening line",
+          "charged line ('marrying')",
+          "hot delivery (Gloating)"
+        ],
+        "cliff": [
+          "ends on a threat/reveal line ('never')"
+        ],
+        "standalone": [],
+        "premise": [
+          "states the premise (husband, marry, marrying, sister)"
+        ]
+      },
+      "flags": [
+        "weak cliffhanger: the cut may feel like a scene ending, not a question"
+      ],
+      "llm": {}
+    },
+    {
+      "id": "P06",
+      "rank": 6,
+      "kind": "single",
+      "source": "rules",
+      "duration": 57.7,
+      "segments": [
+        {
+          "episode": 12,
+          "start": 11.8,
+          "end": 69.5,
+          "cue_ids": [
+            "E12-C007",
+            "E12-C008",
+            "E12-C009",
+            "E12-C010",
+            "E12-C011",
+            "E12-C012",
+            "E12-C013",
+            "E12-C014",
+            "E12-C015",
+            "E12-C016",
+            "E12-C017",
+            "E12-C018",
+            "E12-C019",
+            "E12-C020",
+            "E12-C021",
+            "E12-C022",
+            "E12-C023",
+            "E12-C024",
+            "E12-C025",
+            "E12-C026",
+            "E12-C027",
+            "E12-C028",
+            "E12-C029",
+            "E12-C030",
+            "E12-C031",
+            "E12-C032",
+            "E12-C033",
+            "E12-C034",
+            "E12-C035",
+            "E12-C036",
+            "E12-C037",
+            "E12-C038",
+            "E12-C039",
+            "E12-C040",
+            "E12-C041",
+            "E12-C042",
+            "E12-C043",
+            "E12-C044"
+          ],
+          "scene_heading": "INT. COTTAGE – CONTINUOUS",
+          "start_ts": "00:11.80",
+          "end_ts": "01:09.50",
+          "duration": 57.7
+        }
+      ],
+      "hook": "Close-up of Juliana glaring back with unwavering conviction | Juliana: \"Then someone put it there!\"",
+      "cliffhanger": "Clarissa: \"Fail, or refuse, and your husband hangs from the gallows.\" | Extreme close-up of Clarissa's mouth leaning directly into Juliana's ear, whispering venomously",
+      "why": "Opens on menace in frame ('riding crop'); cuts on ends on a threat/reveal line ('gallows'); states the premise (beggar, husband, sister, wife).",
+      "post_reason": "Violence hook; states the premise on screen.",
+      "scores": {
+        "hook": 0.75,
+        "cliff": 0.25,
+        "standalone": 0.805,
+        "premise": 1.0,
+        "total": 0.649,
+        "final": 0.649,
+        "post_value": 0.739
+      },
+      "reasons": {
+        "hook": [
+          "menace in frame ('riding crop')",
+          "short punchy opening line",
+          "charged line ('beggar')",
+          "hot delivery (Passionate)"
+        ],
+        "cliff": [
+          "ends on a threat/reveal line ('gallows')"
+        ],
+        "standalone": [
+          "first line leans on earlier context ('Then')"
+        ],
+        "premise": [
+          "states the premise (beggar, husband, sister, wife)"
+        ]
+      },
+      "flags": [
+        "weak cliffhanger: the cut may feel like a scene ending, not a question"
+      ],
+      "llm": {}
+    },
+    {
+      "id": "P07",
+      "rank": 7,
+      "kind": "stitched",
+      "source": "rules",
+      "duration": 44.88,
+      "segments": [
+        {
+          "episode": 31,
+          "start": 70.5,
+          "end": 80.5,
+          "cue_ids": [
+            "E31-C040",
+            "E31-C041",
+            "E31-C042",
+            "E31-C043",
+            "E31-C044",
+            "E31-C045"
+          ],
+          "scene_heading": "INT. CASTLE SUBTERRANEAN WET CELLS – NIGHT",
+          "start_ts": "01:10.50",
+          "end_ts": "01:20.50",
+          "duration": 10.0
+        },
+        {
+          "episode": 32,
+          "start": 119.5,
+          "end": 154.38,
+          "cue_ids": [
+            "E32-C089",
+            "E32-C090",
+            "E32-C091",
+            "E32-C092",
+            "E32-C093",
+            "E32-C094",
+            "E32-C095",
+            "E32-C096",
+            "E32-C097",
+            "E32-C098",
+            "E32-C099",
+            "E32-C100",
+            "E32-C101",
+            "E32-C102",
+            "E32-C103",
+            "E32-C104",
+            "E32-C105",
+            "E32-C106",
+            "E32-C107",
+            "E32-C108",
+            "E32-C109",
+            "E32-C110",
+            "E32-C111",
+            "E32-C112",
+            "E32-C113",
+            "E32-C114",
+            "E32-C115",
+            "E32-C116"
+          ],
+          "scene_heading": "INT. DUNGEON CELLS – CONTINUOUS",
+          "start_ts": "01:59.50",
+          "end_ts": "02:34.38",
+          "duration": 34.88
+        }
+      ],
+      "hook": "Medium shot of Catherine sneering down at her | Catherine: \"A scarred nobody.\"",
+      "cliffhanger": "Catherine: \"Then let's see how brave you are when it touches your skin!\" | Juliana gasps, freezing as the glowing tip of the iron thrusts forward, stopping mere millimeters from her right eye",
+      "why": "Opens on emotional beat ('sneering'); cuts on tension sting ('cliffhanger'); states the premise (marriage, nobody, scarred).",
+      "post_reason": "Humiliation hook; late-season payoff: hold for retargeting viewers who already know the premise; states the premise on screen; stitched: compresses the setup→twist arc into one clip; hard cliffhanger ending.",
+      "scores": {
+        "hook": 0.65,
+        "cliff": 0.65,
+        "standalone": 0.826,
+        "premise": 1.0,
+        "total": 0.728,
+        "final": 0.728,
+        "post_value": 0.768
+      },
+      "reasons": {
+        "hook": [
+          "emotional beat ('sneering')",
+          "short punchy opening line",
+          "charged line ('nobody')",
+          "hot delivery (Contemptuous)"
+        ],
+        "cliff": [
+          "tension sting ('cliffhanger')",
+          "episode's own cliffhanger ending"
+        ],
+        "standalone": [],
+        "premise": [
+          "states the premise (marriage, nobody, scarred)",
+          "states the premise (title)"
+        ],
+        "stitch": [
+          "shared characters: Catherine, Juliana"
+        ]
+      },
+      "flags": [
+        "location jump: 'INT. CASTLE SUBTERRANEAN WET CELLS – NIGHT' → 'INT. DUNGEON CELLS – CONTINUOUS'"
+      ],
+      "llm": {}
+    },
+    {
+      "id": "P08",
+      "rank": 8,
+      "kind": "single",
+      "source": "rules",
+      "duration": 52.97,
+      "segments": [
+        {
+          "episode": 37,
+          "start": 103.5,
+          "end": 156.47,
+          "cue_ids": [
+            "E37-C056",
+            "E37-C057",
+            "E37-C058",
+            "E37-C059",
+            "E37-C060",
+            "E37-C061",
+            "E37-C062",
+            "E37-C063",
+            "E37-C064",
+            "E37-C065",
+            "E37-C066",
+            "E37-C067",
+            "E37-C068",
+            "E37-C069",
+            "E37-C070",
+            "E37-C071",
+            "E37-C072",
+            "E37-C073",
+            "E37-C074",
+            "E37-C075",
+            "E37-C076",
+            "E37-C077",
+            "E37-C078"
+          ],
+          "scene_heading": "INT. ASHBRIDGE DUNGEON – CONTINUOUS",
+          "start_ts": "01:43.50",
+          "end_ts": "02:36.47",
+          "duration": 52.97
+        }
+      ],
+      "hook": "Full shot of Juliana using her bare hands against the slimy stone floor to drag herself upright to her knees, chains rattling loudly | Juliana: \"I will not!\"",
+      "cliffhanger": "A deep, ominous cello rumble builds alongside the crackle of the fireplace into an unresolved, tension-filled cliffhanger sting before fading out",
+      "why": "Opens on on-screen shock ('drag'); cuts on tension sting ('ominous'); states the premise (married, nobody, peasants).",
+      "post_reason": "Violence hook; late-season payoff: hold for retargeting viewers who already know the premise; states the premise on screen; hard cliffhanger ending.",
+      "scores": {
+        "hook": 0.73,
+        "cliff": 0.72,
+        "standalone": 0.753,
+        "premise": 0.75,
+        "total": 0.735,
+        "final": 0.735,
+        "post_value": 0.737
+      },
+      "reasons": {
+        "hook": [
+          "on-screen shock ('drag')",
+          "short punchy opening line",
+          "hot delivery (Straining)"
+        ],
+        "cliff": [
+          "tension sting ('ominous')",
+          "ending camera beat ('slow push')",
+          "episode's own cliffhanger ending"
+        ],
+        "standalone": [
+          "references earlier events"
+        ],
+        "premise": [
+          "states the premise (married, nobody, peasants)"
+        ]
+      },
+      "flags": [],
+      "llm": {}
+    },
+    {
+      "id": "P09",
+      "rank": 9,
+      "kind": "single",
+      "source": "rules",
+      "duration": 49.25,
+      "segments": [
+        {
+          "episode": 3,
+          "start": 96.5,
+          "end": 145.75,
+          "cue_ids": [
+            "E03-C081",
+            "E03-C082",
+            "E03-C083",
+            "E03-C084",
+            "E03-C085",
+            "E03-C086",
+            "E03-C087",
+            "E03-C088",
+            "E03-C089",
+            "E03-C090",
+            "E03-C091",
+            "E03-C092",
+            "E03-C093",
+            "E03-C094",
+            "E03-C095",
+            "E03-C096",
+            "E03-C097",
+            "E03-C098",
+            "E03-C099",
+            "E03-C100",
+            "E03-C101",
+            "E03-C102",
+            "E03-C103",
+            "E03-C104",
+            "E03-C105",
+            "E03-C106",
+            "E03-C107",
+            "E03-C108",
+            "E03-C109",
+            "E03-C110",
+            "E03-C111",
+            "E03-C112",
+            "E03-C113",
+            "E03-C114",
+            "E03-C115",
+            "E03-C116",
+            "E03-C117"
+          ],
+          "scene_heading": "INT. CATHEDRAL AISLE – CONTINUOUS",
+          "start_ts": "01:36.50",
+          "end_ts": "02:25.75",
+          "duration": 49.25
+        }
+      ],
+      "hook": "Medium close-up on the Noble Matriarch shrieking in exasperation from the altar steps | Noble Matriarch: \"You cannot interfere in a family matter!\"",
+      "cliffhanger": "Alexander: \"Lady Juliana... accept my hand.\" | Juliana gazes down at her rugged savior, overcome with emotion as the swelling score holds on the cliffhanger",
+      "why": "Opens on on-screen shock ('shrieking'); cuts on tension sting ('swelling score'); states the premise (wife).",
+      "post_reason": "Humiliation hook; entry point: the viewer lands on ep 1–5 and binges forward; hard cliffhanger ending.",
+      "scores": {
+        "hook": 0.73,
+        "cliff": 0.6,
+        "standalone": 0.892,
+        "premise": 0.25,
+        "total": 0.651,
+        "final": 0.651,
+        "post_value": 0.744
+      },
+      "reasons": {
+        "hook": [
+          "on-screen shock ('shrieking')",
+          "short punchy opening line",
+          "hot delivery (Furious)"
+        ],
+        "cliff": [
+          "tension sting ('swelling score')",
+          "episode's own cliffhanger ending"
+        ],
+        "standalone": [
+          "references earlier events"
+        ],
+        "premise": [
+          "states the premise (wife)"
+        ]
+      },
+      "flags": [],
+      "llm": {}
+    },
+    {
+      "id": "P10",
+      "rank": 10,
+      "kind": "single",
+      "source": "rules",
+      "duration": 56.2,
+      "segments": [
+        {
+          "episode": 28,
+          "start": 82.3,
+          "end": 138.5,
+          "cue_ids": [
+            "E28-C061",
+            "E28-C062",
+            "E28-C063",
+            "E28-C064",
+            "E28-C065",
+            "E28-C066",
+            "E28-C067",
+            "E28-C068",
+            "E28-C069",
+            "E28-C070",
+            "E28-C071",
+            "E28-C072",
+            "E28-C073",
+            "E28-C074",
+            "E28-C075",
+            "E28-C076",
+            "E28-C077",
+            "E28-C078",
+            "E28-C079",
+            "E28-C080",
+            "E28-C081",
+            "E28-C082",
+            "E28-C083",
+            "E28-C084",
+            "E28-C085",
+            "E28-C086",
+            "E28-C087",
+            "E28-C088",
+            "E28-C089",
+            "E28-C090",
+            "E28-C091",
+            "E28-C092",
+            "E28-C093",
+            "E28-C094",
+            "E28-C095"
+          ],
+          "scene_heading": "INT. DUCHESS'S BEDCHAMBER – DAY",
+          "start_ts": "01:22.30",
+          "end_ts": "02:18.50",
+          "duration": 56.2
+        }
+      ],
+      "hook": "Medium shot of Juliana being dragged further into the doorway, staring helplessly toward her discarded locket | Juliana: \"My mother's locket!\"",
+      "cliffhanger": "Catherine: \"...before he sends you to the gallows.\" | Extreme close-up of Juliana's wide, trembling eyes as the guard wrenches her backward into the dark hallway, cutting sharply to black",
+      "why": "Opens on on-screen shock ('dragged'); cuts on episode's own cliffhanger ending; states the premise (bride, husband, married).",
+      "post_reason": "Violence hook; states the premise on screen.",
+      "scores": {
+        "hook": 0.65,
+        "cliff": 0.55,
+        "standalone": 0.89,
+        "premise": 0.75,
+        "total": 0.683,
+        "final": 0.683,
+        "post_value": 0.72
+      },
+      "reasons": {
+        "hook": [
+          "on-screen shock ('dragged')",
+          "short punchy opening line"
+        ],
+        "cliff": [
+          "episode's own cliffhanger ending",
+          "ends on a threat/reveal line ('gallows')"
+        ],
+        "standalone": [],
+        "premise": [
+          "states the premise (bride, husband, married)"
+        ]
+      },
+      "flags": [],
+      "llm": {}
+    },
+    {
+      "id": "P11",
+      "rank": 11,
+      "kind": "single",
+      "source": "rules",
+      "duration": 35.25,
+      "segments": [
+        {
+          "episode": 45,
+          "start": 86.5,
+          "end": 121.75,
+          "cue_ids": [
+            "E45-C056",
+            "E45-C057",
+            "E45-C058",
+            "E45-C059",
+            "E45-C060",
+            "E45-C061",
+            "E45-C062",
+            "E45-C063",
+            "E45-C064",
+            "E45-C065",
+            "E45-C066",
+            "E45-C067",
+            "E45-C068",
+            "E45-C069",
+            "E45-C070",
+            "E45-C071",
+            "E45-C072",
+            "E45-C073"
+          ],
+          "scene_heading": "INT. CATHEDRAL ENTRANCE – CONTINUOUS",
+          "start_ts": "01:26.50",
+          "end_ts": "02:01.75",
+          "duration": 35.25
+        }
+      ],
+      "hook": "A Catholic Bishop in dark vestments steps through the cathedral doors accompanied by an armed Crown officer | High Priest: \"No one will bow yet!\"",
+      "cliffhanger": "Catherine raises her chin, a vindictive smirk spreading across her lips as she realizes her rival's claim has just been torn to pieces",
+      "why": "Opens on on-screen shock ('slam'); cuts on ending camera beat ('slow push'); states the premise (duchess, marriage, wife).",
+      "post_reason": "Confrontation hook; late-season payoff: hold for retargeting viewers who already know the premise; states the premise on screen.",
+      "scores": {
+        "hook": 0.83,
+        "cliff": 0.42,
+        "standalone": 0.82,
+        "premise": 0.75,
+        "total": 0.723,
+        "final": 0.723,
+        "post_value": 0.686
+      },
+      "reasons": {
+        "hook": [
+          "on-screen shock ('slam')",
+          "impact sound ('thud')",
+          "short punchy opening line",
+          "hot delivery (Booming)"
+        ],
+        "cliff": [
+          "ending camera beat ('slow push')",
+          "episode's own cliffhanger ending"
+        ],
+        "standalone": [],
+        "premise": [
+          "states the premise (duchess, marriage, wife)"
+        ]
+      },
+      "flags": [
+        "names an off-screen character: Alexander",
+        "late-season spoiler risk (ep 45: post-reveal arc)"
+      ],
+      "llm": {}
+    },
+    {
+      "id": "P12",
+      "rank": 12,
+      "kind": "stitched",
+      "source": "rules",
+      "duration": 40.96,
+      "segments": [
+        {
+          "episode": 42,
+          "start": 23.4,
+          "end": 30.4,
+          "cue_ids": [
+            "E42-C012",
+            "E42-C013",
+            "E42-C014",
+            "E42-C015",
+            "E42-C016",
+            "E42-C017",
+            "E42-C018"
+          ],
+          "scene_heading": "INT. CATHEDRAL – CONTINUOUS",
+          "start_ts": "00:23.40",
+          "end_ts": "00:30.40",
+          "duration": 7.0
+        },
+        {
+          "episode": 43,
+          "start": 81.0,
+          "end": 114.96,
+          "cue_ids": [
+            "E43-C066",
+            "E43-C067",
+            "E43-C068",
+            "E43-C069",
+            "E43-C070",
+            "E43-C071",
+            "E43-C072",
+            "E43-C073",
+            "E43-C074",
+            "E43-C075",
+            "E43-C076",
+            "E43-C077",
+            "E43-C078",
+            "E43-C079",
+            "E43-C080",
+            "E43-C081",
+            "E43-C082",
+            "E43-C083",
+            "E43-C084",
+            "E43-C085",
+            "E43-C086"
+          ],
+          "scene_heading": "INT. RUINED CATHEDRAL – CONTINUOUS",
+          "start_ts": "01:21.00",
+          "end_ts": "01:54.96",
+          "duration": 33.96
+        }
+      ],
+      "hook": "Close-up on Rupert, veins bulging in his neck as his composure shatters | Blond Nobleman: \"I said arrest him!\"",
+      "cliffhanger": "Police Constable: \"Going somewhere, Lord Sterling?\" | Extreme close-up on Lord Sterling's face frozen in pure terror, his jaw agape as his escape is completely cut off, holding until fade to black",
+      "why": "Opens on on-screen shock ('shatters'); cuts on ending camera beat ('fade to black'); states the premise (duke, estate, title).",
+      "post_reason": "Violence hook; late-season payoff: hold for retargeting viewers who already know the premise; states the premise on screen; stitched: compresses the setup→twist arc into one clip.",
+      "scores": {
+        "hook": 0.95,
+        "cliff": 0.54,
+        "standalone": 0.741,
+        "premise": 0.75,
+        "total": 0.745,
+        "final": 0.745,
+        "post_value": 0.718
+      },
+      "reasons": {
+        "hook": [
+          "on-screen shock ('shatters')",
+          "short punchy opening line",
+          "charged line ('arrest')",
+          "hot delivery (Screaming)"
+        ],
+        "cliff": [
+          "ending camera beat ('fade to black')",
+          "episode's own cliffhanger ending",
+          "ends on an unanswered question"
+        ],
+        "standalone": [
+          "5 speaking characters"
+        ],
+        "premise": [
+          "states the premise (duke, estate, title)"
+        ],
+        "stitch": [
+          "shared characters: Blond Nobleman, Catherine, Rupert"
+        ]
+      },
+      "flags": [
+        "location jump: 'INT. CATHEDRAL – CONTINUOUS' → 'INT. RUINED CATHEDRAL – CONTINUOUS'",
+        "names an off-screen character: Rupert",
+        "late-season spoiler risk (ep 43: post-reveal arc)"
+      ],
+      "llm": {}
+    },
+    {
+      "id": "P13",
+      "rank": 13,
+      "kind": "single",
+      "source": "rules",
+      "duration": 57.39,
+      "segments": [
+        {
+          "episode": 16,
+          "start": 25.8,
+          "end": 83.19,
+          "cue_ids": [
+            "E16-C022",
+            "E16-C023",
+            "E16-C024",
+            "E16-C025",
+            "E16-C026",
+            "E16-C027",
+            "E16-C028",
+            "E16-C029",
+            "E16-C030",
+            "E16-C031",
+            "E16-C032",
+            "E16-C033",
+            "E16-C034",
+            "E16-C035",
+            "E16-C036",
+            "E16-C037",
+            "E16-C038",
+            "E16-C039",
+            "E16-C040",
+            "E16-C041",
+            "E16-C042",
+            "E16-C043",
+            "E16-C044",
+            "E16-C045",
+            "E16-C046",
+            "E16-C047",
+            "E16-C048",
+            "E16-C049",
+            "E16-C050",
+            "E16-C051",
+            "E16-C052",
+            "E16-C053",
+            "E16-C054",
+            "E16-C055",
+            "E16-C056",
+            "E16-C057",
+            "E16-C058",
+            "E16-C059",
+            "E16-C060",
+            "E16-C061",
+            "E16-C062",
+            "E16-C063"
+          ],
+          "scene_heading": "EXT. JULIANA'S COTTAGE GARDEN – NIGHT",
+          "start_ts": "00:25.80",
+          "end_ts": "01:23.19",
+          "duration": 57.39
+        }
+      ],
+      "hook": "Alexander deflects the strike with his forearm, drives a swift counter-blow into the thug's torso, and spins him violently to the ground | Third Thug: \"Stay back!\"",
+      "cliffhanger": "Alexander: \"No.\" | Alexander and Juliana gaze deeply into each other's eyes, an unspoken bond forming between them as the ruined garden lies silent beneath the moon",
+      "why": "Opens on on-screen shock ('strike'); cuts on tension sting ('swelling'); states the premise (soldier).",
+      "post_reason": "Violence hook; hard cliffhanger ending.",
+      "scores": {
+        "hook": 0.83,
+        "cliff": 0.6,
+        "standalone": 0.939,
+        "premise": 0.25,
+        "total": 0.696,
+        "final": 0.696,
+        "post_value": 0.708
+      },
+      "reasons": {
+        "hook": [
+          "on-screen shock ('strike')",
+          "impact sound ('impact')",
+          "short punchy opening line",
+          "hot delivery (Desperate)"
+        ],
+        "cliff": [
+          "tension sting ('swelling')",
+          "episode's own cliffhanger ending"
+        ],
+        "standalone": [],
+        "premise": [
+          "states the premise (soldier)"
+        ]
+      },
+      "flags": [
+        "names an off-screen character: Gerald"
+      ],
+      "llm": {}
+    },
+    {
+      "id": "P14",
+      "rank": 14,
+      "kind": "single",
+      "source": "rules",
+      "duration": 39.5,
+      "segments": [
+        {
+          "episode": 15,
+          "start": 46.5,
+          "end": 86.0,
+          "cue_ids": [
+            "E15-C031",
+            "E15-C032",
+            "E15-C033",
+            "E15-C034",
+            "E15-C035",
+            "E15-C036",
+            "E15-C037",
+            "E15-C038",
+            "E15-C039",
+            "E15-C040",
+            "E15-C041",
+            "E15-C042",
+            "E15-C043",
+            "E15-C044",
+            "E15-C045",
+            "E15-C046",
+            "E15-C047",
+            "E15-C048",
+            "E15-C049",
+            "E15-C050",
+            "E15-C051",
+            "E15-C052",
+            "E15-C053",
+            "E15-C054"
+          ],
+          "scene_heading": "EXT. HERBAL GARDEN - NIGHT",
+          "start_ts": "00:46.50",
+          "end_ts": "01:26.00",
+          "duration": 39.5
+        }
+      ],
+      "hook": "The Thug with Cap violently shoves Juliana back with both hands; she cries out as she loses her balance and crashes hard onto the wet stone path | Juliana: \"No.\"",
+      "cliffhanger": "Thug With Cap: \"What? You want to fight us, veteran?\" | Tense, low dramatic cello swell holding into an abrupt cliffhanger cut",
+      "why": "Opens on on-screen shock ('shoves'); cuts on tension sting ('dramatic').",
+      "post_reason": "Violence hook; hard cliffhanger ending.",
+      "scores": {
+        "hook": 0.65,
+        "cliff": 0.77,
+        "standalone": 0.943,
+        "premise": 0.0,
+        "total": 0.677,
+        "final": 0.677,
+        "post_value": 0.677
+      },
+      "reasons": {
+        "hook": [
+          "on-screen shock ('shoves')",
+          "aggressive camera",
+          "short punchy opening line"
+        ],
+        "cliff": [
+          "tension sting ('dramatic')",
+          "episode's own cliffhanger ending",
+          "ends on an unanswered question"
+        ],
+        "standalone": [],
+        "premise": []
+      },
+      "flags": [
+        "names an off-screen character: Alexander"
+      ],
+      "llm": {}
+    },
+    {
+      "id": "P15",
+      "rank": 15,
+      "kind": "single",
+      "source": "rules",
+      "duration": 57.5,
+      "segments": [
+        {
+          "episode": 18,
+          "start": 134.5,
+          "end": 192.0,
+          "cue_ids": [
+            "E18-C065",
+            "E18-C066",
+            "E18-C067",
+            "E18-C068",
+            "E18-C069",
+            "E18-C070",
+            "E18-C071",
+            "E18-C072",
+            "E18-C073",
+            "E18-C074",
+            "E18-C075",
+            "E18-C076",
+            "E18-C077",
+            "E18-C078",
+            "E18-C079",
+            "E18-C080"
+          ],
+          "scene_heading": "EXT. COTTAGE - FRONT YARD - CONTINUOUS",
+          "start_ts": "02:14.50",
+          "end_ts": "03:12.00",
+          "duration": 57.5
+        }
+      ],
+      "hook": "Wide shot of the cottage completely consumed by towering flames against the dark night sky | Juliana: \"Our home...\"",
+      "cliffhanger": "Juliana: \"What are you going to do?\"",
+      "why": "Opens on on-screen shock ('flames'); cuts on tension sting ('swelling score').",
+      "post_reason": "Violence hook; hard cliffhanger ending.",
+      "scores": {
+        "hook": 0.6,
+        "cliff": 0.84,
+        "standalone": 0.931,
+        "premise": 0.0,
+        "total": 0.648,
+        "final": 0.648,
+        "post_value": 0.648
+      },
+      "reasons": {
+        "hook": [
+          "on-screen shock ('flames')",
+          "short punchy opening line"
+        ],
+        "cliff": [
+          "tension sting ('swelling score')",
+          "ending camera beat ('cut to black')",
+          "episode's own cliffhanger ending",
+          "ends on an unanswered question"
+        ],
+        "standalone": [],
+        "premise": []
+      },
+      "flags": [],
+      "llm": {}
+    }
+  ]
+}

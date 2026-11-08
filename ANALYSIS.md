@@ -1,4 +1,4 @@
-# Promo finder: results, posting order, quality check
+# SceneScout: results, posting order, quality check
 
 **Show:** *I Married a Broken Soldier. He was a Duke*: 50 episodes, 1:10–3:20 each, 3,727 script cues.
 **Run:** `python -m promo_finder "data/I Married a Broken Soldier. He was a Duke" --out raw_outputs/rules_only`, about 4 seconds.

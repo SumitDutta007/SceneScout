@@ -53,5 +53,3 @@ The repo deploys as-is. `index.html` is the landing page, the pre-computed resul
 
 - **Dashboard:** push to GitHub → vercel.com → *Add New Project* → import the repo → Framework preset **Other** → Deploy. No environment variables are needed.
 - **CLI:** `npx vercel login` then `npx vercel --prod` from the repo root.
-
-The LLM pass is deliberately not exposed on the public site. It takes minutes per show (past a serverless timeout), and a public endpoint would let anyone spend the API key's quota. Run it from the CLI and commit the output.

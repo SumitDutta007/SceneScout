@@ -11,7 +11,10 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import re
 import sys
+import threading
+import time
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
@@ -20,19 +23,24 @@ from .candidates import (Promo, Segment, make_segment, legal_starts, legal_ends,
                          describe_cliff, score_window, MIN_LEN, MAX_LEN)
 from . import signals as sg
 
-MODEL = "claude-opus-5-5"
+DEFAULT_MODELS = {"claude": "claude-opus-5-5", "gemini": "gemini-3.5-flash"}  # flash-latest / 3.8 hung in testing (2026-11-08)
+PROVIDER = "claude"
+MODEL = DEFAULT_MODELS["claude"]
 CACHE_DIR = Path(".cache")
-# $ per million tokens (input, output, cache read, cache write) for cost reporting
+# $ per million tokens (input, output, cache read, cache write) for cost reporting.
+# Gemini free-tier calls cost $0; paid-tier prices vary by model, so they are not estimated here.
 PRICES = {"claude-opus-5-5": (4.0, 20.0, 0.20, 5.0), "claude-sonnet-5-5": (2.0, 10.0, 0.20, 2.5),
           "claude-haiku-5-5": (0.10, 0.50, 0.01, 0.125)}
 USAGE = {"calls": 0, "cached_calls": 0, "input": 0, "output": 0, "cache_read": 0, "cache_write": 0}
 
 
 def usage_cost() -> dict:
-    pi, po, pr, pw = PRICES.get(MODEL, PRICES["claude-opus-5-5"])
+    if MODEL not in PRICES:
+        return dict(USAGE, provider=PROVIDER, model=MODEL, usd="n/a (free tier / unknown price)")
+    pi, po, pr, pw = PRICES[MODEL]
     usd = (USAGE["input"] * pi + USAGE["output"] * po + USAGE["cache_read"] * pr
            + USAGE["cache_write"] * pw) / 1e6
-    return dict(USAGE, model=MODEL, usd=round(usd, 3))
+    return dict(USAGE, provider=PROVIDER, model=MODEL, usd=round(usd, 3))
 
 GUIDE = """You are a senior short-form promo editor for vertical microdrama apps (ReelShort / DramaBox style).
 A promo is a 20-60 second clip cut from the show itself and posted on TikTok / Instagram Reels / YouTube Shorts
@@ -98,7 +106,30 @@ RANK_SCHEMA = {
 }
 
 
+def load_dotenv(path: str | Path = ".env") -> None:
+    """Minimal .env reader (no dependency). Existing environment variables win."""
+    p = Path(path)
+    if not p.exists():
+        return
+    for line in p.read_text(encoding="utf-8").splitlines():
+        if "=" in line and not line.lstrip().startswith("#"):
+            k, v = line.split("=", 1)
+            os.environ.setdefault(k.strip(), v.strip().strip('"').strip("'"))
+
+
+def _gemini_key() -> str:
+    return os.environ.get("GEMINI_API_KEY") or os.environ.get("GAMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY") or ""
+
+
+def configure(provider: str, model: str | None) -> None:
+    global PROVIDER, MODEL
+    PROVIDER = provider
+    MODEL = model or DEFAULT_MODELS[provider]
+
+
 def available() -> tuple[bool, str]:
+    if PROVIDER == "gemini":
+        return (True, "ok") if _gemini_key() else (False, "no GEMINI_API_KEY in environment or .env")
     try:
         import anthropic  # noqa: F401
     except ImportError:
@@ -152,12 +183,95 @@ def _cand_block(cands: list[Promo]) -> str:
 # ---------------------------------------------------------------- API call + cache
 
 def _call(system_static: str, user: str, schema: dict, effort: str = "high") -> dict:
-    key = hashlib.sha256(json.dumps([MODEL, effort, system_static, user, schema], sort_keys=True).encode()).hexdigest()[:24]
+    key = hashlib.sha256(json.dumps([PROVIDER, MODEL, effort, system_static, user, schema],
+                                    sort_keys=True).encode()).hexdigest()[:24]
     CACHE_DIR.mkdir(exist_ok=True)
     cpath = CACHE_DIR / f"{key}.json"
     if cpath.exists():
         USAGE["cached_calls"] += 1
         return json.loads(cpath.read_text(encoding="utf-8"))["data"]
+    backend = _gemini_call if PROVIDER == "gemini" else _claude_call
+    data, rec = backend(system_static, user, schema, effort)
+    USAGE["calls"] += 1
+    for k, v in rec.items():
+        USAGE[k] += v
+    cpath.write_text(json.dumps({"usage": rec, "data": data}, indent=1), encoding="utf-8")
+    return data
+
+
+# --- Gemini (REST, stdlib only). Free tier = low requests/minute, so calls are spaced out
+# and 429/503 responses are retried after the delay the API asks for.
+GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
+GEMINI_MIN_GAP = float(os.environ.get("GEMINI_MIN_GAP", "6.5"))   # seconds between calls (~9 RPM)
+_gemini_lock = threading.Lock()
+_gemini_last = [0.0]
+
+
+def _gemini_schema(s):
+    """JSON Schema -> Gemini responseSchema (OpenAPI subset: no additionalProperties)."""
+    if isinstance(s, dict):
+        return {k: _gemini_schema(v) for k, v in s.items() if k not in ("additionalProperties",)}
+    if isinstance(s, list):
+        return [_gemini_schema(x) for x in s]
+    return s
+
+
+def _gemini_call(system_static: str, user: str, schema: dict, effort: str) -> tuple[dict, dict]:
+    import urllib.error
+    import urllib.request
+    body = json.dumps({
+        "systemInstruction": {"parts": [{"text": system_static}]},
+        "contents": [{"role": "user", "parts": [{"text": user}]}],
+        "generationConfig": {"responseMimeType": "application/json",
+                             "responseSchema": _gemini_schema(schema),
+                             "maxOutputTokens": 32000},
+    }).encode()
+    url = GEMINI_URL.format(model=MODEL)
+    for attempt in range(8):
+        with _gemini_lock:
+            wait = _gemini_last[0] + GEMINI_MIN_GAP - time.time()
+            if wait > 0:
+                time.sleep(wait)
+            _gemini_last[0] = time.time()
+        req = urllib.request.Request(url, data=body, method="POST", headers={
+            "Content-Type": "application/json", "X-goog-api-key": _gemini_key()})
+        try:
+            resp = json.load(urllib.request.urlopen(req, timeout=180))
+            break
+        except urllib.error.HTTPError as e:
+            msg = e.read().decode("utf-8", "replace")
+            if e.code in (429, 500, 503) and attempt < 7:
+                m = re.search(r'"retryDelay":\s*"(\d+)', msg)
+                delay = int(m.group(1)) + 1 if m else min(60, 5 * 2 ** attempt)
+                if delay > 300:   # a daily quota, not a per-minute one: fail now instead of sleeping for hours
+                    q = re.search(r'"quotaId":\s*"([^"]+)"', msg)
+                    raise RuntimeError(f"Gemini quota exhausted ({q.group(1) if q else 'daily'}); "
+                                       f"resets in ~{delay // 3600}h. Cached calls are kept, so re-run later "
+                                       "or pass a different --model.")
+                print(f"    gemini {e.code}, retry {attempt + 1} in {delay}s", flush=True)
+                time.sleep(delay)
+                continue
+            raise RuntimeError(f"Gemini HTTP {e.code}: {msg[:300]}") from e
+        except (urllib.error.URLError, TimeoutError) as e:
+            if attempt < 3:
+                print(f"    gemini timeout/connection error, retry {attempt + 1}", flush=True)
+                time.sleep(5 * (attempt + 1)); continue
+            raise RuntimeError(f"Gemini connection error: {e}") from e
+    cands = resp.get("candidates") or []
+    if not cands:
+        raise RuntimeError(f"Gemini returned no candidates ({resp.get('promptFeedback')})")
+    fr = cands[0].get("finishReason")
+    if fr not in ("STOP", None):
+        raise RuntimeError(f"Gemini finishReason={fr}")
+    text = "".join(p.get("text", "") for p in cands[0]["content"]["parts"] if not p.get("thought"))
+    um = resp.get("usageMetadata", {})
+    rec = {"input": um.get("promptTokenCount", 0) - um.get("cachedContentTokenCount", 0),
+           "output": um.get("candidatesTokenCount", 0) + um.get("thoughtsTokenCount", 0),
+           "cache_read": um.get("cachedContentTokenCount", 0), "cache_write": 0}
+    return json.loads(text), rec
+
+
+def _claude_call(system_static: str, user: str, schema: dict, effort: str) -> tuple[dict, dict]:
     import anthropic
     client = anthropic.Anthropic()
     try:
@@ -187,13 +301,8 @@ def _call(system_static: str, user: str, schema: dict, effort: str = "high") -> 
     rec = {"input": u.input_tokens, "output": u.output_tokens,
            "cache_read": getattr(u, "cache_read_input_tokens", 0) or 0,
            "cache_write": getattr(u, "cache_creation_input_tokens", 0) or 0}
-    USAGE["calls"] += 1
-    for k, v in rec.items():
-        USAGE[k] += v
     text = next(b.text for b in msg.content if b.type == "text")
-    data = json.loads(text)
-    cpath.write_text(json.dumps({"usage": rec, "data": data}, indent=1), encoding="utf-8")
-    return data
+    return json.loads(text), rec
 
 
 # ---------------------------------------------------------------- validation
@@ -247,23 +356,37 @@ def to_promo(item: dict, cue_index: dict, eps: dict[int, Episode]) -> tuple[Prom
 
 # ---------------------------------------------------------------- passes
 
-def judge_episodes(eps: list[Episode], rule_cands: list[Promo], workers: int = 6, log=print) -> list[Promo]:
+def judge_episodes(eps: list[Episode], rule_cands: list[Promo], workers: int = 6, log=print,
+                   per_call: int = 1) -> list[Promo]:
+    """Judge episodes in groups of `per_call`. One episode per call gives the model the most attention per
+    episode; 5 per call cuts the call count ~5x (needed on rate-limited free tiers, cheaper at scale)."""
     by_ep = {e.num: e for e in eps}
     cue_index = {c.cue_id: c for e in eps for c in e.cues}
     system = GUIDE + "\n\n" + series_bible(eps)
+    groups = [eps[i:i + per_call] for i in range(0, len(eps), per_call)]
 
-    def one(ep: Episode) -> list[Promo]:
-        cands = [p for p in rule_cands if p.kind == "single" and p.segments[0].episode == ep.num][:6]
-        user = (f"{transcript(ep)}\n\nRULE-BASED CANDIDATES for this episode (may be wrong):\n{_cand_block(cands)}\n\n"
-                "Task: propose the best 1-3 promos that can be cut from THIS episode (single continuous stretch, or "
-                "2-3 segments from this episode in order). Refine candidate boundaries where a better hook or a "
-                "harder cliffhanger is a few cues away; reject weak candidates with a reason. Each promo must total "
-                "20-60s and its first 3s must contain the hook. If the episode has nothing promo-worthy, return an "
-                "empty list; don't force it.")
+    def one(group: list[Episode]) -> list[Promo]:
+        parts = []
+        for ep in group:
+            cands = [p for p in rule_cands if p.kind == "single" and p.segments[0].episode == ep.num][:6]
+            parts.append(f"{transcript(ep)}\n\nRULE-BASED CANDIDATES for episode {ep.num} (may be wrong):\n"
+                         f"{_cand_block(cands)}")
+        scope = ("THIS episode" if len(group) == 1 else
+                 f"EACH of the {len(group)} episodes above (judge each episode separately; a promo's segments "
+                 "must all come from one episode")
+        user = ("\n\n".join(parts) + "\n\n"
+                f"Task: propose the best 1-3 promos that can be cut from {scope}"
+                + (")" if len(group) > 1 else "") +
+                " (single continuous stretch, or 2-3 segments from the same episode in order). Refine candidate "
+                "boundaries where a better hook or a harder cliffhanger is a few cues away; reject weak candidates "
+                "with a reason (refer to them as '<episode>:C<n>'). Each promo must total 20-60s and its first 3s "
+                "must contain the hook. If an episode has nothing promo-worthy, propose nothing for it; don't "
+                "force it.")
+        label = f"ep {group[0].num}" + (f"-{group[-1].num}" if len(group) > 1 else "")
         try:
             data = _call(system, user, JUDGE_SCHEMA)
         except Exception as e:  # noqa: BLE001
-            log(f"  ! ep {ep.num}: {e}")
+            log(f"  ! {label}: {e}")
             return []
         out = []
         for item in data.get("promos", []):
@@ -271,12 +394,13 @@ def judge_episodes(eps: list[Episode], rule_cands: list[Promo], workers: int = 6
             if p:
                 out.append(p)
             else:
-                log(f"  - ep {ep.num}: dropped LLM promo ({why})")
+                log(f"  - {label}: dropped LLM promo ({why})")
+        log(f"  {label}: {len(out)} promos")
         return out
 
     results: list[Promo] = []
     with ThreadPoolExecutor(max_workers=workers) as ex:
-        for ps in ex.map(one, eps):
+        for ps in ex.map(one, groups):
             results.extend(ps)
     return results
 

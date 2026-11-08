@@ -2,22 +2,23 @@
 <html lang="en"><head><meta charset="utf-8">
 <title>Promo Finder: Solution</title>
 <style>
-@page { size: A4; margin: 13mm 14mm; }
+@page { size: A4; margin: 12mm 13mm; }
 * { box-sizing: border-box; }
-body { font: 9.4pt/1.36 "Segoe UI", Calibri, Arial, sans-serif; color: #1b1d22; margin: 0; }
-h1 { font-size: 15pt; margin: 0 0 1mm; }
-h2 { font-size: 10.6pt; margin: 3.2mm 0 1mm; padding-bottom: .6mm; border-bottom: 1px solid #c9ced8; color: #14306b; }
-p { margin: 0 0 1.4mm; }
-ul { margin: 0 0 1.4mm; padding-left: 4.5mm; }
-li { margin: 0 0 .5mm; }
-.meta { color: #555; font-size: 9pt; margin-bottom: 1.5mm; }
+body { font: 9.2pt/1.34 "Segoe UI", Calibri, Arial, sans-serif; color: #1b1d22; margin: 0; }
+h1 { font-size: 14.5pt; margin: 0 0 1mm; }
+h2 { font-size: 10.4pt; margin: 2.8mm 0 1mm; padding-bottom: .5mm; border-bottom: 1px solid #c9ced8; color: #14306b; }
+p { margin: 0 0 1.3mm; }
+ul { margin: 0 0 1.3mm; padding-left: 4.5mm; }
+li { margin: 0 0 .45mm; }
+.meta { color: #555; font-size: 8.8pt; margin-bottom: 1.2mm; }
 .ph { background: #fff3b0; padding: 0 2px; }
-table { border-collapse: collapse; width: 100%; margin: .5mm 0 1.6mm; font-size: 8.7pt; }
-th, td { border: 1px solid #d3d7df; padding: .7mm 1.4mm; text-align: left; vertical-align: top; }
+table { border-collapse: collapse; width: 100%; margin: .5mm 0 1.5mm; font-size: 8.5pt; }
+th, td { border: 1px solid #d3d7df; padding: .6mm 1.3mm; text-align: left; vertical-align: top; }
 th { background: #eef1f6; font-weight: 600; }
-code { font-family: Consolas, monospace; font-size: 8.5pt; background: #f2f3f6; padding: 0 2px; }
+td.n { text-align: center; white-space: nowrap; }
+code { font-family: Consolas, monospace; font-size: 8.3pt; background: #f2f3f6; padding: 0 2px; }
 .two { display: grid; grid-template-columns: 1fr 1fr; gap: 5mm; }
-.note { border-left: 3px solid #d08a00; background: #fff8e8; padding: 1mm 2mm; margin: 1mm 0 1.6mm; }
+.key { border-left: 3px solid #14306b; background: #eef3fb; padding: 1mm 2mm; margin: 1mm 0 1.5mm; }
 .pb { break-before: page; }
 b { font-weight: 600; }
 </style></head><body>
@@ -26,51 +27,48 @@ b { font-weight: 600; }
 <div class="meta"><span class="ph">[Name · Roll no. · Branch]</span> &nbsp;·&nbsp; Problem 1 &nbsp;·&nbsp; Prototype + raw outputs: <span class="ph">[GitHub link]</span></div>
 
 <h2>1. The problem, and why I picked it</h2>
-<p>Today an editor watches every episode of every show to find promo moments, and a new show ships every week. That cost grows with the catalogue and repeats forever, so it is the highest-leverage place to automate. The input also suits a tool unusually well: the scripts are <b>timestamped cue by cue</b> (camera, action, sound, dialogue with emotion tags), so the tool can return exact cut points an editor can act on, not vague suggestions. And the output is checkable, because every pick traces back to script lines.</p>
+<p><span class="ph">[Rewrite in your own words.]</span> Today an editor watches every episode of every show to find promo moments, and a new show ships every week. That cost grows with the catalogue and repeats forever, so it is the highest-leverage place to automate. The input also suits a tool unusually well: the scripts are <b>timestamped cue by cue</b> (camera, action, sound, dialogue with emotion tags), so the tool can return exact cut points an editor can act on. And the output is checkable, because every pick traces back to script lines.</p>
 
 <h2>2. Assumptions (where the brief was silent)</h2>
 <ul>
-<li><b>Script time ≈ final-cut time</b>, within a second or two. Boundaries should be re-snapped on the video before cutting.</li>
+<li><b>Script time ≈ final-cut time</b>, within a second or two. Boundaries are re-snapped on the video before cutting.</li>
 <li>A promo is 20–60s. The hook sits in the <b>first 3s of segment 1</b>, the cliffhanger in the <b>last ~4–6s</b>. Stitched promos are 2–3 segments in story order. Cuts land only on a shot change, never mid-line.</li>
-<li>The output is a <b>shortlist for an editor</b> (15 per show), not auto-posted clips. The goal is <b>new-viewer acquisition</b>, so early-episode entry points rank higher.</li>
-<li>The title already reveals the twist ("He was a Duke"), so that reveal isn't a spoiler. Late-arc outcomes (ep 39+) are.</li>
-<li>Every show arrives in this same script format.</li>
+<li>The output is a <b>shortlist for an editor</b>, not auto-posted clips. The goal is <b>new-viewer acquisition</b>, so early-episode entry points rank higher and late-arc payoffs (ep 39+) are held back. The title already gives away "He was a Duke", so that reveal isn't a spoiler.</li>
+<li>Every show arrives in this script format.</li>
 </ul>
 
 <h2>3. How it works</h2>
-<p><b>Parse → legal cut points → score → generate candidates → (Claude judge) → select → order → quality flags → JSON / report / HTML viewer.</b> One command: <code>python -m promo_finder "data/&lt;show&gt;" --mode auto</code>.</p>
+<p><b>Parse → legal cut points → rule scores → candidates → LLM judge → select → posting order → quality flags → JSON / report / HTML viewer.</b> One command: <code>python -m promo_finder "data/&lt;show&gt;" --mode hybrid --provider gemini|claude</code>.</p>
 <table>
-<tr><th style="width:17%">Who does it</th><th>What</th><th style="width:30%">Why there</th></tr>
-<tr><td><b>Code / rules</b></td><td>Parse 3,727 cues. Legal cuts only (shot boundaries, never inside a line). Enforce 20–60s and story order. Hook / cliffhanger / standalone / premise scores from cue types, delivery tags, music notes, threat and question lines, interruptions. Diversity rules (≤2 per episode, no duplicate openings, stitches ≤⅓). Posting-order rules (entry-point bonus, spoiler cost, rotate hook types).</td><td>These must be deterministic, free and auditable. Correctness here is not a judgment call.</td></tr>
-<tr><td><b>Claude</b> (<code>claude-opus-5-5</code>, structured JSON)</td><td>(1) Per episode: read the full transcript plus the rule candidates, then refine boundaries or reject candidates, with a reason and a cold-viewer test. (2) Cross-episode stitching. (3) Posting order and strategy. Claude answers with <b>cue IDs, never timestamps</b>. Code maps them back to the script, snaps them to legal cuts and drops anything invalid (logged).</td><td>"Would a scrolling stranger stop?" and "is the question still open?" are about meaning, which rules can't read (see §5).</td></tr>
-<tr><td><b>Editor</b></td><td>Reviews 15 picks in <code>viewer.html</code>, with script excerpts and the hook and cliffhanger windows highlighted. Cuts the video, and logs accepted or rejected picks to <code>gold.json</code>.</td><td>The final cut and taste stay human. Their decisions become the evaluation set.</td></tr>
+<tr><th style="width:15%">Who</th><th>What</th><th style="width:29%">Why there</th></tr>
+<tr><td><b>Code / rules</b></td><td>Parse 3,727 cues. Only shot boundaries are legal cuts, never inside a line. Enforce 20–60s and story order. Hook / cliffhanger / standalone / premise scores from cue types, delivery tags, music notes, threat and question lines, interruptions. Diversity rules (≤2 per episode, no duplicate openings, stitches ≤⅓). Posting order (entry-point bonus, spoiler cost, rotate hook types).</td><td>Must be deterministic, free and auditable. Also the fallback when no LLM is available.</td></tr>
+<tr><td><b>LLM</b> (Gemini 3 Flash for this run; Claude supported)</td><td>(1) Reads full episode transcripts (5 per call) plus the rule candidates, then proposes, refines or rejects promos with a cold-viewer test. (2) Builds cross-episode stitches. (3) Writes the posting order and strategy. The LLM answers with <b>script cue IDs, never timestamps</b>. Code maps them back to the script, snaps them to legal cuts and <b>drops invalid output</b>: 5 of 56 proposals here were rejected (up to 73s long, or segments out of order).</td><td>"Would a scrolling stranger stop?" and "is the question still open?" are about meaning, which rules can't read.</td></tr>
+<tr><td><b>Editor</b></td><td>Reviews the shortlist in <code>viewer.html</code>, with script excerpts and the hook and cliffhanger windows highlighted. Cuts the video, and logs accepted or rejected picks to <code>gold.json</code>.</td><td>The final cut and taste stay human. Their decisions become the evaluation set.</td></tr>
 </table>
 
-<h2>4. Scale and cost</h2>
+<h2>4. Scale and cost (measured on the full 50-episode show)</h2>
 <div class="two"><div>
 <ul>
-<li><b>Rules-only:</b> <b>3.8s</b> for a 50-episode show on a laptop. $0. No dependencies.</li>
-<li><b>Hybrid:</b> about 52 Claude calls per show (50 episode judges, 1 stitch, 1 rank), 6 in parallel. The show summary is prompt-cached across calls, and responses are disk-cached, so re-runs are free. <i>Estimated</i> at about 300k input and 250k output tokens per show: <b>≈$6 on Opus 5.5</b>, <b>≈$0.15 on Haiku 5.5</b> (<code>--model</code>). The tool prints <i>measured</i> token use and cost per run. Nothing is latency-sensitive, so the Batch API would halve this.</li>
+<li><b>Rules-only:</b> 3.8s, $0.</li>
+<li><b>Hybrid:</b> <b>12 LLM calls, 2.5 min, 269k input + 49k output tokens</b>, $0 on Gemini's free tier. The same token count would cost about <b>$2/show at Claude Opus 5.5 prices</b> or about <b>$0.05 at Haiku 5.5 prices</b>. Batching 5 episodes per call cut the calls from ~52 to 12. Responses are disk-cached, so re-runs are free.</li>
+<li><b>Free tier is a prototype only:</b> 20 requests/day/model (I hit it on the first, unbatched run), and Google may use free-tier inputs. Production needs a paid tier.</li>
 </ul></div><div>
 <ul>
-<li><b>Editor time:</b> from watching ~100 min of footage per show to reviewing 15 shortlisted clips (≈20–30 min, my assumption).</li>
-<li><b>What breaks at catalogue scale:</b> main cast is already derived per show from dialogue counts, but <b>speaker aliases</b> (<code>THE FORMER GROOM</code>→Gerald) are a hand-made map; Claude could resolve them. <b>Scripts that don't describe the music</b> will score far lower on cliffhangers. <b>A new script format</b> needs a new parser.</li>
+<li><b>Editor time:</b> from watching ~100 min of footage per show to reviewing about 30 shortlisted clips with script excerpts (≈20–30 min; my assumption).</li>
+<li><b>Catalogue-scale risks:</b> main cast is derived per show, but <b>speaker aliases</b> (<code>THE FORMER GROOM</code>→Gerald) are a hand-made map. <b>Scripts that don't describe the music</b> weaken the rule cliffhanger signal. <b>A new script format</b> needs a new parser. <b>LLM model churn:</b> two Gemini model IDs were already retired or hanging during this build, so the model is a flag, not hard-coded.</li>
 </ul></div></div>
 
 <h2 class="pb">5. How I know it's good, and where it fails</h2>
-<div class="note"><b>Honest status:</b> every result here comes from the <b>rule engine</b>. The Claude layer is built and tested against a mocked API, but has <b>not been run on real model output</b> (no API key on this machine), so it is unproven.</div>
-<p><b>Automated checks (9 tests, all passing):</b> all 50 episodes parse; ep 6's missing scene end is repaired; no cut point splits a line; every candidate is 20–60s and in story order; the ep 3 proposal cliffhanger is found; Claude output with bad cue IDs or bad lengths is rejected.</p>
-<p><b>Hand audit:</b> I read the script behind all 15 picks. <b>9 are usable as-is, 6 have a real problem:</b></p>
+<p><b>Automated checks (9 tests, all passing):</b> all 50 episodes parse; ep 6's missing scene end is repaired; no cut splits a line; candidates are 20–60s and in story order; the ep 3 proposal cliffhanger is found; LLM output with bad cue IDs or bad lengths is rejected.</p>
+<p><b>Evaluation against fixed picks:</b> before the LLM run, I listed 12 must-have moments (ep 1 altar betrayal, ep 3 proposal, ep 12–13 thorn ultimatum and crawl, ep 24 strike, ep 27 ring reveal, ep 32 hot iron, ep 36 "dead Duke", ep 41 explosion…). These are my picks, not an editor's, so treat this as a sanity check, not ground truth. A moment counts as found if a promo covers ≥50% of it (<code>raw_outputs/eval_vs_my_picks.json</code>).</p>
 <table>
-<tr><th style="width:21%">Bad pick</th><th>What's wrong</th><th style="width:30%">Root cause</th></tr>
-<tr><td>#1 Ep 4 + Ep 5</td><td>Ends on "Come." as the couple walk off: the story is at rest, not a cliffhanger. Ranked first.</td><td>Trusts the writer's music note ("orchestral swell") over the story.</td></tr>
-<tr><td>#3 Ep 29 + Ep 38</td><td>Ends on a warm smile, and joins pieces 9 episodes apart.</td><td>Same; emotional direction across the join isn't modelled.</td></tr>
-<tr><td>#13 Ep 16, #15 Ep 18</td><td>The best beat is buried mid-clip. The fire is 2s of flames, then 50s of embrace.</td><td>Only the two ends of a window are scored, not its peak or pacing.</td></tr>
-<tr><td>#6 Ep 12</td><td>Opens mid-argument ("Then someone put it there!": what?).</td><td>Shallow opening-context check. It is also wrongly flagged as a weak cliffhanger.</td></tr>
-<tr><td>#12 Ep 42–43</td><td>Ends on "Lord Sterling", someone a cold viewer has never met.</td><td>The unknown-name check only covers the top 10 speakers.</td></tr>
+<tr><th></th><th class="n">My 12 moments found anywhere in the candidate pool</th><th class="n">…that made the top 15</th><th class="n">Bad endings in top 15 (hand audit)</th><th class="n">Late-season clips in top 15</th></tr>
+<tr><td><b>Rules only</b></td><td class="n">11 / 12</td><td class="n">6 / 12</td><td class="n">6 (e.g. ends on "Come.", a warm smile)</td><td class="n">2</td></tr>
+<tr><td><b>Hybrid (Gemini)</b></td><td class="n">11 / 12</td><td class="n">5 / 12</td><td class="n">1 (ep 13 ends once the ring is found)</td><td class="n">4</td></tr>
 </table>
-<p><b>Misses:</b> the <b>ep 13 blackthorn crawl</b> (cliffhanger score 0.00: "she hasn't found the ring yet" isn't a keyword); the <b>ep 26–27 ring reveal</b> (0.21–0.29: the hook is meaning, not words); the <b>ep 24 riding-crop strike</b> and the <b>ep 41 explosion</b> (found, but out-ranked). Tuning against the scripts already fixed several false positives: "fire" matching "fireplace", "tear" matching tears, props counted as violence, unrelated plots joined in a stitch, and stitches taking 10 of 15 slots.</p>
-<p><b>Which to post first (my read):</b> ① Ep 1 00:39.00–00:54.60 + 01:47.40–02:17.00 (sister takes the groom; the whole premise in 45s) → ② Ep 3 01:00.00–01:06.00 + 01:50.80–02:25.75 (dragged out, then a stranger kneels and proposes, answer withheld) → ③ Ep 12 00:56.80–01:09.50 + Ep 13 00:47.00–01:29.00 (gallows ultimatum into the barehanded crawl) → ④ Ep 36 02:36.50–03:20.75 ("their dead Duke is coming home") → ⑤ Ep 31 + 32 (hot iron). <b>Hold</b> ep 42–45 for retargeting: they spoil the arc. The tool generates all of these, but not all in its top 15, and I paired ③ by hand. That gap is exactly what the Claude judge and a gold set must close.</p>
-<p><b>How "good" would be proven:</b> (1) An editor logs the promos they actually cut for 5–10 past shows. <code>--gold</code> then reports precision@k and temporal IoU for every change. (2) Track the editor's weekly accept rate on new shows. (3) The real judge is promo performance: 3-second hold rate and click-through to ep 1. Feed the winners back as examples.</p>
+<div class="key"><b>Main finding: finding moments works; choosing among them doesn't yet.</b> Both engines surface nearly every big moment. The LLM fixed the rules' worst failure: it understood the story, so it stopped picking music-swell endings where nothing is left open. It also found the ep 24 strike, the ep 41 explosion and the ep 26 ring recognition that the rules under-rated. But it <b>rated almost everything 5/5</b>, so its scores don't separate good from great, and the final top 15 dropped the ep 1 opener and the ep 3 proposal. It also kept 4 late-season clips even though its own strategy said to hold them.</div>
+<p><b>Other failures seen in real runs:</b> the rules trigger on stage-direction words ("sneering grin", a gavel "striking" the desk) and trust the writer's music notes. They score only a clip's ends, so peaks buried mid-clip are missed (ep 16, ep 18). The LLM wrote paraphrased hooks ("The visceral image of…") where an editor needs the actual line, which the report shows next to each one. The LLM proposed clips up to 73s and out-of-order stitches, all caught by the validator. And nothing has been checked against real video timing yet.</p>
+<p><b>Next fixes, in order:</b> (1) replace 1–5 scores with <b>pairwise "which promo is better?" comparisons</b>, to fix score saturation; (2) show the editor the <b>top ~30 from the pool</b> (11/12 recall) instead of a hard top 15; (3) build a real gold set from editors' past cuts (<code>--gold</code> reports precision@k and temporal IoU); (4) the final judge is promo performance: 3-second hold rate and click-through to ep 1.</p>
+<p><b>What I'd post first:</b> ① Ep 1 00:39.00–00:54.60 + 01:47.40–02:17.00 (sister takes the groom; the whole premise) → ② Ep 2 00:00–00:12 + Ep 3 01:19.0–01:29.3 (rejected at the altar → a stranger floors a guard; LLM pick) → ③ Ep 3 01:36.50–02:25.75 (proposal, answer withheld) → ④ Ep 12 00:56.80–01:09.50 + Ep 13 00:47.00–01:29.00 (gallows ultimatum → barehanded crawl) → ⑤ Ep 32 01:56.80–02:34.38 (hot iron at her eye). Hold ep 41–45 for retargeting.</p>
 
 </body></html>

@@ -3,7 +3,7 @@
 **Show:** *I Married a Broken Soldier. He was a Duke*: 50 episodes, 1:10–3:20 each, 3,727 script cues.
 **Run:** `python -m promo_finder "data/I Married a Broken Soldier. He was a Duke" --out raw_outputs/rules_only`, about 4 seconds.
 
-> **Read this first.** This machine has no Anthropic API key, so these results come from the **rule engine only**. The Claude judge, stitch and ranking passes (`llm.py`) are built and tested against a fake API, but they have **not been run on real model output**. Everything below is the rules' output plus my own read of the scripts. Full per-promo detail with script excerpts is in `raw_outputs/rules_only/report.md` and `raw_outputs/rules_only/viewer.html`.
+> **Two runs.** Sections 1–3 analyse the **rules-only** run (`raw_outputs/rules_only/`). Section 4 adds the **hybrid run with Gemini 3 Flash** (`raw_outputs/hybrid_gemini/`) and compares both against 12 moments I listed in this file *before* that run.
 
 Timestamps are `mm:ss.xx` within each episode, taken from the script's own cue times.
 
@@ -84,3 +84,30 @@ The ordering logic, which the tool encodes in `rank.posting_order`: post the pre
 - **Run hybrid mode.** `--mode hybrid` with a key adds the Claude judge, which reads each full episode and is told to refine or reject the rule candidates. Misses #1–#3 above are exactly what it should fix. Its scores are blended with the rules, and large disagreements are flagged for a human. It hasn't been measured yet.
 - **Build a gold set.** Have the editor log the promos they actually cut for 5–10 back-catalogue shows, then run `--gold picks.json` to track precision@k and temporal IoU per tool change. After that, track the editor's accept rate on each week's new shows, and finally the promos' real performance (3-second hold rate, CTR to ep 1). That last signal is the only one that really settles "best promo".
 - **Cheap rule fixes:** score the peak inside the window, not just its ends; down-weight stage-direction adjectives; learn the cliffhanger threshold from the gold set; extend the unknown-name check to every named speaker.
+
+---
+
+## 4. Hybrid run (Gemini 3 Flash): what the LLM changed
+
+`python -m promo_finder "data/..." --mode hybrid --provider gemini --model gemini-3-flash-preview`. **12 calls (5 episodes per call), 2.5 min, 269k input + 49k output tokens, $0 on the free tier.** The validator dropped 5 of 56 LLM proposals (lengths up to 73.7s, or out-of-order stitches). Log: `raw_outputs/hybrid_gemini/run_log.txt`.
+
+**Against the 12 moments from §2–3** (`eval/my_picks_gold.json`, scores in `raw_outputs/eval_vs_my_picks.json`; a moment counts as found if a promo covers ≥50% of it):
+
+| | Found anywhere in the candidate pool | Made the top 15 | Bad endings in top 15 (hand audit) | Late-season clips in top 15 |
+|---|---|---|---|---|
+| Rules only | 11/12 | 6/12 | 6 | 2 |
+| Hybrid | 11/12 | 5/12 | 1 | 4 |
+
+**What got better:**
+- It dropped every "story at rest" ending the rules picked (ep 4+5 "Come.", ep 29+38 smile, ep 16, ep 18).
+- It found the ep 3 rescue (00:56.20–01:24.00), the ep 2→3 stitch (rejected at the altar → a stranger floors a guard), the ep 24 strike (00:28.80–01:03.80), the ep 26 ring recognition and the ep 41 explosion.
+- It independently proposed the ep 12 → ep 13 ultimatum→crawl stitch I built by hand in §2. Its version ends once the ring is found, which resolves the tension; mine ends mid-crawl.
+
+**What got worse or didn't change:**
+- **Score saturation:** nearly every proposal got hook 5 and cliffhanger 5, so the LLM scores don't separate good from great, and the blend lets the rules decide. The "rules vs LLM disagree" flag fired on 9 of 15 picks.
+- **Selection lost the premise clips:** the ep 1 altar opener and the ep 3 proposal are in the pool but not the top 15. Batching (5 episodes per call) may cost per-episode attention: a single-episode call on ep 3 *did* return the proposal.
+- **4 late-season clips** (ep 41–45) remain, even though the LLM's own strategy said to hold them. The rank pass's priority is only lightly weighted.
+- **Paraphrased hooks:** the LLM wrote "The visceral image of…" where an editor needs the actual line. The report shows the script excerpt next to each one.
+- ep 27's interrupted ring reveal is still not found by either engine.
+
+**Conclusion:** finding moments is largely solved (11/12 in both pools); **choosing among them is the bottleneck**. The next steps are pairwise LLM comparisons instead of 1–5 scores, and showing the editor the top ~30 from the pool instead of a hard top 15.

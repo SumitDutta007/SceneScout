@@ -19,8 +19,13 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--top", type=int, default=15, help="number of promos to output")
     ap.add_argument("--per-episode", type=int, default=3, help="rule candidates kept per episode")
     ap.add_argument("--gold", help="optional editor-picked promos JSON for evaluation")
-    ap.add_argument("--workers", type=int, default=6, help="parallel Claude calls")
-    ap.add_argument("--model", default="claude-opus-5-5", help="Claude model for hybrid mode")
+    ap.add_argument("--workers", type=int, default=6, help="parallel LLM calls")
+    ap.add_argument("--episodes-per-call", type=int, default=None,
+                    help="episodes judged per LLM call (default 1 for claude, 5 for gemini free tier)")
+    ap.add_argument("--provider", choices=["claude", "gemini"], default="claude",
+                    help="LLM for hybrid mode (gemini reads GEMINI_API_KEY from env or .env)")
+    ap.add_argument("--model", default=None,
+                    help="model id (default: claude-opus-5-5 / gemini-3.5-flash)")
     args = ap.parse_args(argv)
 
     if hasattr(sys.stdout, "reconfigure"):
@@ -41,22 +46,26 @@ def main(argv: list[str] | None = None) -> int:
     strategy = ""
     if mode in ("auto", "hybrid"):
         from . import llm
-        llm.MODEL = args.model
+        llm.load_dotenv()
+        llm.configure(args.provider, args.model)
+        if args.provider == "gemini" and args.workers > 2:
+            args.workers = 2   # free tier: calls are rate-spaced anyway
         ok, why = llm.available()
         if not ok:
             if mode == "hybrid":
-                print(f"--mode hybrid needs Claude: {why}", file=sys.stderr)
+                print(f"--mode hybrid needs an LLM: {why}", file=sys.stderr)
                 return 2
-            print(f"Claude unavailable ({why}); running rules-only.")
+            print(f"LLM unavailable ({why}); running rules-only.")
             mode = "rules"
         else:
             mode = "hybrid"
             log = lambda m: (print(m), llm_log.append(m.strip()))
-            print("Claude pass 1/3: judging each episode…")
-            judged = llm.judge_episodes(eps, cands, workers=args.workers, log=log)
+            print(f"LLM ({llm.MODEL}) pass 1/3: judging each episode…")
+            per_call = args.episodes_per_call or (5 if args.provider == "gemini" else 1)
+            judged = llm.judge_episodes(eps, cands, workers=args.workers, log=log, per_call=per_call)
             print(f"  {len(judged)} validated LLM promos")
             best_moments = sorted(judged, key=lambda p: -rank.final_score(p))[:20]
-            print("Claude pass 2/3: cross-episode stitching…")
+            print(f"LLM ({llm.MODEL}) pass 2/3: cross-episode stitching…")
             stitched = llm.stitch_pass(eps, best_moments, log=log)
             print(f"  {len(stitched)} validated stitched promos")
             # rule candidates stay in the pool, but LLM-validated ones carry blended scores
@@ -65,7 +74,7 @@ def main(argv: list[str] | None = None) -> int:
     chosen = rank.select(cands, top=args.top)
     if mode == "hybrid":
         from . import llm
-        print("Claude pass 3/3: posting order…")
+        print(f"LLM ({llm.MODEL}) pass 3/3: posting order…")
         strategy = llm.apply_rank(chosen, llm.rank_pass(eps, chosen, log=lambda m: (print(m), llm_log.append(m))))
     ordered = rank.posting_order(chosen)
     for p in ordered:
@@ -75,7 +84,7 @@ def main(argv: list[str] | None = None) -> int:
         from . import llm
         cost = llm.usage_cost()
         llm_log.append(f"usage: {cost}")
-        print(f"Claude usage: {cost}")
+        print(f"LLM usage: {cost}")
     meta = {"show": show, "mode": mode, "episodes": len(eps), "strategy": strategy,
             "diagnostics": quality.run_diagnostics(eps, cands, ordered), "llm_log": llm_log}
     if args.gold:

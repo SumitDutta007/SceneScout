@@ -1,0 +1,47 @@
+Parsed 50 episodes, 3727 cues.
+Rule candidates: 130
+LLM (gemini-3-flash-preview) pass 1/3: judging each episode…
+  - ep 6-10: dropped LLM promo (duration 61.0s outside 20-60s)
+  ep 6-10: 3 promos
+  ep 1-5: 5 promos
+  ep 11-15: 7 promos
+  - ep 16-20: dropped LLM promo (duration 73.7s outside 20-60s)
+  ep 16-20: 2 promos
+  ep 21-25: 5 promos
+    gemini 429, retry 1 in 13s
+  - ep 26-30: dropped LLM promo (segments out of story order or overlapping)
+  ep 26-30: 4 promos
+  ep 36-40: 5 promos
+  ep 41-45: 5 promos
+  - ep 31-35: dropped LLM promo (duration 72.2s outside 20-60s)
+  ep 31-35: 4 promos
+  ep 46-50: 4 promos
+  44 validated LLM promos
+LLM (gemini-3-flash-preview) pass 2/3: cross-episode stitching…
+  - stitch: dropped LLM promo (segments out of story order or overlapping)
+  7 validated stitched promos
+LLM (gemini-3-flash-preview) pass 3/3: posting order…
+LLM usage: {'calls': 12, 'cached_calls': 0, 'input': 269349, 'output': 49095, 'cache_read': 0, 'cache_write': 0, 'provider': 'gemini', 'model': 'gemini-3-flash-preview', 'usd': 'n/a (free tier / unknown price)'}
+
+Top 15 promos (hybrid):
+  1. E5 00:54.00-01:41.50                      47.5s  score 0.77  The visceral image of the stepmother snatching the heroine's last heir
+  2. E2 00:00.00-00:12.00 + E3 01:19.00-01:29.30  22.3s  score 0.77  A cold fiancé publicly rejects Juliana at the altar, calling her 'plai
+  3. E3 00:56.20-01:24.00                      27.8s  score 0.77  The Matriarch shrieking for guards to 'Remove her!' followed by a phys
+  4. E4 00:03.20-00:38.90                      35.7s  score 0.76  The villain's mocking laugh and the line 'A penniless nobody for a dis
+  5. E32 01:56.80-02:34.38                     37.6s  score 0.87  A chained, dirty woman looks her captor in the eye and tells her: 'You
+  6. E29 00:56.60-01:55.50                     58.9s  score 0.78  Close-up of Juliana screaming back in raw outrage | Juliana: "You are 
+  7. E12 00:43.70-01:27.21                     43.5s  score 0.74  Clarissa's chilling, predatory line: 'I want to see you crawl, sister.
+  8. E36 02:36.50-03:20.75                     44.2s  score 0.83  Profile shot of Alexander as dark realization settles over his face, t
+  9. E31 01:58.20-02:40.00                     41.8s  score 0.77  Lady Juliana delivers a piercing provocation: 'Then why are you so des
+ 10. E13 01:20.50-01:58.88                     38.4s  score 0.74  Alexander violently lunging past the Constable, roaring in agony as hi
+ 11. E38 00:17.50-00:39.50 + E38 01:07.00-01:27.91  42.9s  score 0.80  A guard secretly slipping bread to a starving, shackled woman in a dun
+ 12. E41 00:39.80-01:36.09                     56.3s  score 0.78  Catherine publicly humbles a chained, bruised Juliana in front of a mo
+ 13. E45 01:26.50-02:01.75                     35.2s  score 0.81  The massive cathedral doors slam open as a High Priest stops a coronat
+ 14. E42 00:17.90-01:17.80                     59.9s  score 0.75  Rupert's hysterical order to arrest an 'imposter' is met with a shocki
+ 15. E43 01:33.20-01:54.96                     21.8s  score 0.77  A nobleman's desperate screaming confession that he was lied to leads 
+
+Wrote raw_outputs\hybrid_gemini\promos.json, raw_outputs\hybrid_gemini\report.md, raw_outputs\hybrid_gemini\viewer.html
+
+real	2m32.318s
+user	0m0.015s
+sys	0m0.031s

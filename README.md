@@ -14,7 +14,8 @@ Needs Python 3.10+. The rules mode has no dependencies.
 ```bash
 python -m promo_finder "data/I Married a Broken Soldier. He was a Duke" --out out
 #   --mode rules|hybrid|auto   (auto = use Claude if credentials exist, else rules only)
-#   --model claude-opus-5-5    Claude model for hybrid mode (token usage and $ cost are printed)
+#   --provider claude|gemini   LLM for hybrid mode (default claude)
+#   --model <id>               default claude-opus-5-5 / gemini-3.5-flash; token usage is printed
 #   --top 15                   number of promos
 #   --gold editor_picks.json   score against an editor's picks (precision@k, temporal IoU)
 pip install pytest && python -m pytest tests -q      # 9 tests
@@ -37,6 +38,8 @@ Output goes to `out/` (`all_candidates.json` and the console log are included in
 | Rank | `rank.py` | Blends Claude and rule scores (0.6 / 0.4) when Claude ran. Diversity rules: ≤2 promos per episode, no overlapping or same-opening promos, stitched ≤ ⅓ of the list. Posting order = score + early-episode entry bonus + premise bonus − late-season spoiler cost, then reordered so consecutive posts use different hook types. |
 | Quality | `quality.py` | Per-promo flags (visual-only hook, weak cliffhanger, off-screen names, location jump, newcomer in a stitch, cut inside a music sting, late-season spoiler, rules vs Claude disagreement). Run diagnostics. `--gold` evaluation. |
 
-To run with Claude: `pip install -r requirements.txt`, set `ANTHROPIC_API_KEY` (or `ant auth login`), and use `--mode hybrid`. It makes about 52 calls per show. The cost is not measured yet; the estimate is a few dollars per 50-episode show.
+**LLM providers.** The AI layer is one function (`llm._call`), so it is provider-agnostic.
+- **Gemini (free tier, used for the committed hybrid run):** put `GEMINI_API_KEY=...` in a `.env` file in the project root (git-ignored), then run `--mode hybrid --provider gemini`. It uses the standard library only, with no extra install. Calls are spaced about 6.5s apart for the free tier's rate limit, and 429s are retried. Note that Google may use free-tier inputs to improve its products; production should use a paid tier.
+- **Claude:** `pip install -r requirements.txt`, set `ANTHROPIC_API_KEY` (or `ant auth login`), and use `--mode hybrid`. It makes about 52 calls per show. The cost is not measured yet; the estimate is a few dollars per 50-episode show.
 
 See **ANALYSIS.md** for the results on *I Married a Broken Soldier. He was a Duke*, the posting order, and where the tool picks badly.

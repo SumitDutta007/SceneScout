@@ -1,0 +1,68 @@
+{
+ "rules_only": {
+  "iou>=0.3": {
+   "top15_promos_matching_a_pick": 4,
+   "picks_found_in_top15": 5,
+   "picks_found_in_pool": 9,
+   "missed_in_top15": [
+    "ep1 altar betrayal (cut)",
+    "ep3 dragged out",
+    "ep12 gallows ultimatum",
+    "ep13 blackthorn crawl",
+    "ep24 riding-crop strike",
+    "ep27 ring reveal interrupted",
+    "ep41 cathedral explosion"
+   ]
+  },
+  "covers>=50%": {
+   "top15_promos_matching_a_pick": 5,
+   "picks_found_in_top15": 6,
+   "picks_found_in_pool": 11,
+   "missed_in_top15": [
+    "ep1 altar betrayal (cut)",
+    "ep3 dragged out",
+    "ep13 blackthorn crawl",
+    "ep24 riding-crop strike",
+    "ep27 ring reveal interrupted",
+    "ep41 cathedral explosion"
+   ]
+  },
+  "late_season_in_top15": 2,
+  "pool_size": 130
+ },
+ "hybrid_gemini": {
+  "iou>=0.3": {
+   "top15_promos_matching_a_pick": 3,
+   "picks_found_in_top15": 3,
+   "picks_found_in_pool": 10,
+   "missed_in_top15": [
+    "ep1 altar betrayal (hook)",
+    "ep1 altar betrayal (cut)",
+    "ep3 dragged out",
+    "ep3 proposal",
+    "ep12 gallows ultimatum",
+    "ep13 blackthorn crawl",
+    "ep24 riding-crop strike",
+    "ep27 ring reveal interrupted",
+    "ep31 'scarred nobody'"
+   ]
+  },
+  "covers>=50%": {
+   "top15_promos_matching_a_pick": 5,
+   "picks_found_in_top15": 5,
+   "picks_found_in_pool": 11,
+   "missed_in_top15": [
+    "ep1 altar betrayal (hook)",
+    "ep1 altar betrayal (cut)",
+    "ep3 proposal",
+    "ep13 blackthorn crawl",
+    "ep24 riding-crop strike",
+    "ep27 ring reveal interrupted",
+    "ep31 'scarred nobody'"
+   ]
+  },
+  "late_season_in_top15": 4,
+  "pool_size": 181
+ },
+ "note": "Gold = 12 moment-segments listed in ANALYSIS.md BEFORE the Gemini run (author's picks, not an editor's). Two match rules: temporal IoU>=0.3, and promo covers >=50% of the picked moment."
+}

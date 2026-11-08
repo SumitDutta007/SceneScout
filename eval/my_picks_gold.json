@@ -1,0 +1,14 @@
+[
+ {"moment": "ep1 altar betrayal (hook)", "episode": 1, "start": "00:39.00", "end": "00:54.60"},
+ {"moment": "ep1 altar betrayal (cut)", "episode": 1, "start": "01:47.40", "end": "02:17.00"},
+ {"moment": "ep3 dragged out", "episode": 3, "start": "01:00.00", "end": "01:06.00"},
+ {"moment": "ep3 proposal", "episode": 3, "start": "01:50.80", "end": "02:25.75"},
+ {"moment": "ep12 gallows ultimatum", "episode": 12, "start": "00:56.80", "end": "01:09.50"},
+ {"moment": "ep13 blackthorn crawl", "episode": 13, "start": "00:47.00", "end": "01:29.00"},
+ {"moment": "ep24 riding-crop strike", "episode": 24, "start": "00:31.00", "end": "01:04.00"},
+ {"moment": "ep27 ring reveal interrupted", "episode": 27, "start": "00:00.00", "end": "00:52.00"},
+ {"moment": "ep31 'scarred nobody'", "episode": 31, "start": "01:10.50", "end": "01:20.50"},
+ {"moment": "ep32 hot iron", "episode": 32, "start": "01:59.50", "end": "02:34.38"},
+ {"moment": "ep36 dead Duke coming home", "episode": 36, "start": "02:36.50", "end": "03:20.75"},
+ {"moment": "ep41 cathedral explosion", "episode": 41, "start": "00:40.00", "end": "01:36.09"}
+]

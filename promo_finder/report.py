@@ -63,7 +63,7 @@ def write_markdown(path: Path, show: str, promos: list[Promo], eps: dict[int, Ep
               f"- **Post order:** {p.post_reason}",
               "- **Scores:** " + ", ".join(f"{k} {v:.2f}" for k, v in p.scores.items())]
         if p.llm.get("scores"):
-            L.append("- **Claude scores (1–5):** " + ", ".join(f"{k} {v}" for k, v in p.llm["scores"].items()))
+            L.append("- **LLM scores (1–5):** " + ", ".join(f"{k} {v}" for k, v in p.llm["scores"].items()))
             if p.llm.get("cold_viewer_test"):
                 L.append(f"- **Cold-viewer test:** {p.llm['cold_viewer_test']}")
         if p.flags:
@@ -137,7 +137,7 @@ tr.z-hook td:first-child{border-left:3px solid var(--hook)}tr.z-cliff td:first-c
 const DATA = __DATA__;
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-$('#meta').textContent = `${DATA.meta.mode} mode · ${DATA.meta.episodes} episodes · ${DATA.promos.length} promos` + (DATA.meta.strategy ? ' · ' + DATA.meta.strategy : '');
+$('#meta').textContent = (DATA.meta.mode ? `${DATA.meta.mode} mode · ` : '') + `${DATA.meta.episodes} episodes · ${DATA.promos.length} promos` + (DATA.meta.strategy ? ' · ' + DATA.meta.strategy : '');
 function bar(label, v){return `<div class="bar mut">${label} ${v.toFixed(2)}<span><i style="width:${Math.round(Math.min(1,v)*100)}%"></i></span></div>`}
 function render(){
   const q = $('#q').value.toLowerCase(), kind = $('#kind').value, maxep = +$('#maxep').value || 999, nf = $('#noflag').checked;
@@ -148,13 +148,13 @@ function render(){
   $('#list').innerHTML = ps.map(p => `
   <div class="card">
     <div class="top"><div class="rank">#${p.rank}</div><div class="segs">${p.segments.map(s => `Ep ${s.episode} ${s.start_ts} → ${s.end_ts}`).join(' &nbsp;+&nbsp; ')}</div>
-      <span class="pill">${p.kind}</span><span class="pill">${p.duration.toFixed(1)}s</span><span class="pill">${p.source}</span><span class="pill">score ${p.scores.final.toFixed(2)}</span></div>
+      <span class="pill">${p.segments.length > 1 ? p.segments.length + ' segments' : 'continuous'}</span><span class="pill">${p.duration.toFixed(1)}s</span>${p.source ? `<span class="pill">${p.source}</span>` : ''}<span class="pill">score ${p.scores.final.toFixed(2)}</span></div>
     <div class="row"><b>Hook</b><div class="hook">${esc(p.hook)}</div></div>
     <div class="row"><b>Cliffhanger</b><div class="cliff">${esc(p.cliffhanger)}</div></div>
     <div class="row"><b>Why</b><div>${esc(p.why)}</div></div>
     <div class="row"><b>Post order</b><div class="mut">${esc(p.post_reason)}</div></div>
-    ${p.llm && p.llm.cold_viewer_test ? `<div class="row"><b>Cold viewer</b><div class="mut">${esc(p.llm.cold_viewer_test)}</div></div>` : ''}
-    <div class="bars">${bar('hook', p.scores.hook)}${bar('cliff', p.scores.cliff)}${bar('standalone', p.scores.standalone)}${bar('premise', p.scores.premise)}</div>
+    ${p.cold_viewer ? `<div class="row"><b>Cold viewer</b><div class="mut">${esc(p.cold_viewer)}</div></div>` : ''}
+    ${p.scores.hook !== undefined ? `<div class="bars">${bar('hook', p.scores.hook)}${bar('cliff', p.scores.cliff)}${bar('standalone', p.scores.standalone)}${bar('premise', p.scores.premise)}</div>` : ''}
     ${p.flags.length ? `<div class="flags">⚠ ${p.flags.map(esc).join('<br>⚠ ')}</div>` : ''}
     <details><summary>Script excerpt (<span class="hook">■ hook window</span> · <span class="cliff">■ cliffhanger window</span>)</summary>
       ${DATA.excerpts[p.id].map(seg => `<div class="seghead">Ep ${seg.episode} · ${seg.start}–${seg.end} · ${esc(seg.heading)} <span class="mut">(${esc(seg.file)})</span></div>
@@ -167,9 +167,41 @@ render();
 </script></body></html>"""
 
 
-def write_viewer(path: Path, show: str, promos: list[Promo], eps: dict[int, Episode], meta: dict) -> None:
-    data = {"meta": {k: v for k, v in meta.items() if k in ("mode", "episodes", "strategy")},
-            "promos": [p.to_dict() for p in promos],
+_INTERNAL_FLAG = ("LLM", "rule score", "rules vs")
+
+
+def public_promo(p: Promo) -> dict:
+    """What an end user sees: the clip, hook, cliffhanger, reasoning and editorial notes.
+    No engine, model, internal scores or rule traces."""
+    d = p.to_dict()
+    out = {k: d[k] for k in ("id", "rank", "kind", "duration", "segments", "hook", "cliffhanger", "why", "post_reason")}
+    out["scores"] = {"final": d["scores"].get("final", d["scores"].get("total", 0.0))}
+    out["notes"] = [f for f in d["flags"] if not any(t in f for t in _INTERNAL_FLAG)]
+    out["flags"] = out["notes"]
+    if p.llm.get("cold_viewer_test"):
+        out["cold_viewer"] = p.llm["cold_viewer_test"]
+    for s in out["segments"]:
+        s.pop("cue_ids", None)
+    return out
+
+
+def public_promos(promos: list[Promo], eps) -> dict:
+    return {"episodes": len(eps), "promos": [public_promo(p) for p in promos]}
+
+
+def render_viewer(show: str, promos: list[Promo], eps: dict[int, Episode], meta: dict,
+                  public: bool = False) -> str:
+    keep = ("episodes", "strategy") if public else ("mode", "episodes", "strategy")
+    rows = [public_promo(p) for p in promos] if public else [p.to_dict() for p in promos]
+    for r, p in zip(rows, promos):
+        if p.llm.get("cold_viewer_test"):
+            r["cold_viewer"] = p.llm["cold_viewer_test"]
+    data = {"meta": {k: v for k, v in meta.items() if k in keep},
+            "promos": rows,
             "excerpts": {p.id: _excerpt(p, eps) for p in promos}}
     blob = json.dumps(data, ensure_ascii=False).replace("</", "<\\/")
-    path.write_text(VIEWER.replace("__SHOW__", html.escape(show)).replace("__DATA__", blob), encoding="utf-8")
+    return VIEWER.replace("__SHOW__", html.escape(show)).replace("__DATA__", blob)
+
+
+def write_viewer(path: Path, show: str, promos: list[Promo], eps: dict[int, Episode], meta: dict) -> None:
+    path.write_text(render_viewer(show, promos, eps, meta), encoding="utf-8")

@@ -49,7 +49,15 @@ See **ANALYSIS.md** for the results on *I Married a Broken Soldier. He was a Duk
 
 ## Deploy (Vercel)
 
-The repo deploys as-is. `index.html` is the landing page, the pre-computed results under `raw_outputs/` are static pages, and `api/run.py` is a Python function. It takes uploaded episode `.txt` files and runs the **rules engine** live (about 6s for 50 episodes). `.vercelignore` keeps `.env`, `data/` and caches out of the upload.
+The deployed app is one page: upload scripts (files, a folder, drag-and-drop or paste) and get the ranked promos. It runs the full pipeline (rule candidates → AI judge → cross-episode stitching → AI posting order) and doesn't expose which engine or model is used.
 
-- **Dashboard:** push to GitHub → vercel.com → *Add New Project* → import the repo → Framework preset **Other** → Deploy. No environment variables are needed.
-- **CLI:** `npx vercel login` then `npx vercel --prod` from the repo root.
+- `public/index.html` is the page. Only `public/` is served statically, so no source, data or outputs are exposed.
+- `api/judge.py`, `api/stitch.py` and `api/finalize.py` are three short serverless phases (`promo_finder/web.py`). The browser drives them, judging 5 episodes per call, 3 calls in parallel, so no single function runs past the time limit. The server keeps no state: every phase re-parses the uploaded scripts and re-validates model output against them.
+- If the model is unavailable (no key, quota, overload), each phase falls back to the next model, then to the rule engine. The user still gets a result, and the details go only to the server log.
+
+**Setup:** in Vercel, open *Project → Settings → Environment Variables* and add `GEMINI_API_KEY`, then redeploy. Optional settings:
+- `PROMO_MODEL` (default `gemini-3-flash-preview`)
+- `GEMINI_FALLBACK_MODELS` (default `gemini-3.5-flash,gemini-3.5-flash-lite`)
+- `PROMO_PROVIDER=claude` with `ANTHROPIC_API_KEY` (this also needs a `requirements.txt` with `anthropic`)
+
+**Capacity:** a 50-episode show needs about 12 model calls. Gemini's free tier allows 20 calls per model per day, so with the two fallback models that's only a few shows a day. For production, enable billing on the Google AI project. `.env` is never uploaded (see `.vercelignore`).

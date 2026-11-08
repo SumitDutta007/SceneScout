@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SceneScout · Find the promos in your show</title>
+<style>
+:root{--bg:#0d0f14;--card:#151922;--line:#252b37;--fg:#e8eaf0;--mut:#98a0ae;--acc:#ff8a3d;--acc2:#a78bfa;--ok:#34d399;--err:#f87171}
+*{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+main{max-width:980px;margin:0 auto;padding:36px 20px 70px}
+.brand{font-size:28px;font-weight:700;letter-spacing:-.3px}.brand span{color:var(--acc)}
+.sub{color:var(--mut);margin:4px 0 22px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px}
+#drop{border:2px dashed var(--line);border-radius:12px;padding:28px;text-align:center;transition:.15s}
+#drop.over{border-color:var(--acc);background:#1b1f2a}
+#drop b{display:block;font-size:17px;margin-bottom:4px}
+.btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:14px}
+button,.btn{font:inherit;border-radius:9px;padding:9px 16px;border:1px solid var(--line);background:#0f1218;color:var(--fg);cursor:pointer;text-decoration:none;display:inline-block}
+button:hover,.btn:hover{border-color:var(--acc)}
+button.primary{background:var(--acc);border-color:var(--acc);color:#16100a;font-weight:700}
+button:disabled{opacity:.45;cursor:not-allowed}
+textarea{width:100%;min-height:150px;margin-top:10px;background:#0f1218;color:var(--fg);border:1px solid var(--line);border-radius:10px;padding:10px;font:13px/1.4 ui-monospace,Consolas,monospace}
+#list{margin-top:14px;max-height:170px;overflow:auto;font-size:13px;color:var(--mut)}
+#list div{display:flex;justify-content:space-between;border-bottom:1px solid var(--line);padding:3px 2px}
+#list button{padding:0 8px;border:0;background:none;color:var(--mut)}
+.row{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-top:14px}
+.mut{color:var(--mut)}
+#progress{display:none;margin-top:18px}
+.bar{height:8px;background:#0f1218;border-radius:6px;overflow:hidden;border:1px solid var(--line)}
+.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--acc),var(--acc2));transition:width .4s}
+#stage{margin-top:8px;font-size:14px}
+#error{display:none;margin-top:14px;color:var(--err)}
+#result{display:none;margin-top:22px}
+iframe{width:100%;height:82vh;border:1px solid var(--line);border-radius:12px;background:var(--bg)}
+details summary{cursor:pointer;color:var(--mut);margin-top:12px}
+</style></head><body><main>
+<div class="brand">Scene<span>Scout</span></div>
+<div class="sub">Drop in a show's episode scripts. Get back the best 20–60 second promo clips: exact timestamps, the hook, the cliffhanger, and the order to post them in.</div>
+
+<div class="card">
+  <div id="drop">
+    <b>Drag episode scripts or a whole folder here</b>
+    <span class="mut">Timestamped screenplay files (.txt), one per episode</span>
+    <div class="btns">
+      <button id="pickFiles">Choose files</button>
+      <button id="pickFolder">Choose a folder</button>
+    </div>
+    <input id="fileInput" type="file" accept=".txt,text/plain" multiple hidden>
+    <input id="folderInput" type="file" webkitdirectory hidden>
+  </div>
+  <details><summary>…or paste a script</summary>
+    <textarea id="paste" placeholder="Paste one episode's script here, then click “Add pasted script”."></textarea>
+    <div class="btns" style="justify-content:flex-start"><button id="addPaste">Add pasted script</button></div>
+  </details>
+  <div id="list"></div>
+  <div class="row">
+    <span id="count" class="mut">No scripts added yet.</span>
+    <span><button id="clear" disabled>Clear</button> <button id="go" class="primary" disabled>Find promos</button></span>
+  </div>
+  <div id="progress"><div class="bar"><i id="fill"></i></div><div id="stage" class="mut"></div></div>
+  <div id="error"></div>
+</div>
+
+<div id="result">
+  <div class="row" style="margin:0 0 10px">
+    <b id="summary"></b>
+    <span><a id="openFull" class="btn" target="_blank">Open full screen ↗</a> <a id="dlJson" class="btn" download="promos.json">Download results (JSON)</a></span>
+  </div>
+  <iframe id="viewer" title="Promo results"></iframe>
+</div>
+</main>
+<script>
+const $ = s => document.querySelector(s);
+const scripts = new Map();          // name -> text
+let showName = '';
+
+function refresh() {
+  const n = scripts.size;
+  $('#count').textContent = n ? `${n} script${n > 1 ? 's' : ''} ready` : 'No scripts added yet.';
+  $('#go').disabled = !n; $('#clear').disabled = !n;
+  $('#list').innerHTML = [...scripts.keys()].sort().map(k =>
+    `<div><span>${k.replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]))}</span><button data-k="${encodeURIComponent(k)}" title="Remove">✕</button></div>`).join('');
+}
+$('#list').addEventListener('click', e => { const k = e.target.dataset.k; if (k) { scripts.delete(decodeURIComponent(k)); refresh(); } });
+
+async function addFiles(files) {
+  for (const f of files) {
+    if (!/\.txt$/i.test(f.name)) continue;
+    if (!showName && f.webkitRelativePath) showName = f.webkitRelativePath.split('/')[0];
+    scripts.set(f.name, await f.text());
+  }
+  refresh();
+}
+$('#pickFiles').onclick = () => $('#fileInput').click();
+$('#pickFolder').onclick = () => $('#folderInput').click();
+$('#fileInput').onchange = e => addFiles([...e.target.files]);
+$('#folderInput').onchange = e => addFiles([...e.target.files]);
+$('#addPaste').onclick = () => {
+  const t = $('#paste').value.trim(); if (!t) return;
+  const m = t.match(/EPISODE NUMBER:\s*Episode\s*(\d+)/i);
+  const name = m ? `episode-${String(m[1]).padStart(3, '0')}.txt` : `pasted-script-${scripts.size + 1}.txt`;
+  scripts.set(name, t); $('#paste').value = ''; refresh();
+};
+$('#clear').onclick = () => { scripts.clear(); showName = ''; refresh(); };
+
+// drag & drop, including folders
+const drop = $('#drop');
+['dragenter', 'dragover'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add('over'); }));
+['dragleave', 'drop'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove('over'); }));
+drop.addEventListener('drop', async e => {
+  const items = [...(e.dataTransfer.items || [])].map(i => i.webkitGetAsEntry && i.webkitGetAsEntry()).filter(Boolean);
+  if (!items.length) return addFiles([...e.dataTransfer.files]);
+  const out = [];
+  async function walk(entry) {
+    if (entry.isFile) out.push(await new Promise(r => entry.file(r)));
+    else if (entry.isDirectory) {
+      if (!showName) showName = entry.name;
+      const reader = entry.createReader();
+      let batch;
+      do { batch = await new Promise(r => reader.readEntries(r)); for (const c of batch) await walk(c); } while (batch.length);
+    }
+  }
+  for (const it of items) await walk(it);
+  addFiles(out);
+});
+
+// pipeline
+async function call(phase, body, tries = 3) {
+  for (let i = 0; i < tries; i++) {
+    try {
+      const r = await fetch(`/api/${phase}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+      const d = await r.json().catch(() => ({ ok: false, error: `Server error (${r.status})` }));
+      if (d.ok) return d;
+      if (r.status === 400 || r.status === 413) throw Object.assign(new Error(d.error), { fatal: true });
+      if (i === tries - 1) throw new Error(d.error || 'Request failed');
+    } catch (e) { if (e.fatal || i === tries - 1) throw e; }
+    await new Promise(r => setTimeout(r, 2500 * (i + 1)));
+  }
+}
+function progress(pct, text) { $('#fill').style.width = pct + '%'; $('#stage').textContent = text; }
+
+$('#go').onclick = async () => {
+  $('#error').style.display = 'none'; $('#result').style.display = 'none';
+  $('#go').disabled = $('#clear').disabled = true; $('#progress').style.display = 'block';
+  const files = [...scripts].map(([name, text]) => ({ name, text }));
+  const show = showName || 'Your show';
+  const t0 = performance.now();
+  try {
+    progress(4, 'Reading scripts…');
+    const first = await call('judge', { files, group: 0 });
+    const groups = first.groups, items = [...first.items];
+    let done = 1;
+    const label = () => `Analysing episodes… ${Math.min(done * 5, first.episodes)} of ${first.episodes}`;
+    progress(8 + 62 * done / groups, label());
+    const queue = [...Array(groups).keys()].slice(1);
+    async function worker() {
+      while (queue.length) {
+        const g = queue.shift();
+        try { const d = await call('judge', { files, group: g }); items.push(...d.items); } catch (e) { if (e.fatal) throw e; }
+        done++; progress(8 + 62 * done / groups, label());
+      }
+    }
+    await Promise.all([worker(), worker(), worker()]);
+    progress(74, 'Finding moments that work across episodes…');
+    let stitched = [];
+    try { stitched = (await call('stitch', { files, items })).items; } catch (e) { if (e.fatal) throw e; }
+    progress(88, 'Ranking promos and choosing what to post first…');
+    const fin = await call('finalize', { files, items, stitched, show, top: 15 });
+    progress(100, 'Done.');
+    const url = URL.createObjectURL(new Blob([fin.viewer_html], { type: 'text/html' }));
+    $('#viewer').src = url; $('#openFull').href = url;
+    $('#dlJson').href = URL.createObjectURL(new Blob([JSON.stringify(fin.promos, null, 2)], { type: 'application/json' }));
+    $('#summary').textContent = `${fin.promos.promos.length} promos from ${fin.promos.episodes} episodes · ${((performance.now() - t0) / 1000).toFixed(0)}s`;
+    $('#result').style.display = 'block';
+    $('#result').scrollIntoView({ behavior: 'smooth' });
+  } catch (e) {
+    $('#error').textContent = e.message || 'Something went wrong. Please try again.';
+    $('#error').style.display = 'block';
+  } finally {
+    $('#go').disabled = $('#clear').disabled = !scripts.size;
+    setTimeout(() => { $('#progress').style.display = 'none'; }, 1200);
+  }
+};
+</script>
+</body></html>

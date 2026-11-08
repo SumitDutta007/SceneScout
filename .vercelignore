@@ -1,11 +1,15 @@
-# never upload secrets, the input pack, caches or local state
+# Deploy only the app: public/ (static page), api/ (functions) and promo_finder/ (bundled into functions).
+# Never upload secrets, the input pack, outputs, docs or local state.
 .env
 data/
-.cache/
+raw_outputs/
+docs/
+eval/
+tests/
 out/
+.cache/
 .claude/
 .vscode/
 .pytest_cache/
 **/__pycache__/
-tests/
-eval/
+ANALYSIS.md

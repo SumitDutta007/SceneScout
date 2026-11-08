@@ -126,8 +126,11 @@ class Episode:
         return [c for c in self.cues if c.t1 > t0 + 1e-6 and c.t0 < t1 - 1e-6]
 
 
-def parse_episode(path: Path) -> Episode:
-    lines = path.read_text(encoding="utf-8", errors="replace").splitlines()
+def parse_episode(path: Path, text: str | None = None) -> Episode:
+    """Parse one episode from a file, or from `text` (uploads) using `path` only for its name."""
+    if text is None:
+        text = path.read_text(encoding="utf-8", errors="replace")
+    lines = text.splitlines()
     m = RE_FILE_EP.search(path.name)
     ep = Episode(num=int(m.group(1)) if m else 0, path=path)
     scene: Scene | None = None
@@ -205,7 +208,30 @@ def load_show(show_dir: str | Path) -> list[Episode]:
     paths = sorted(Path(show_dir).glob("*.txt"))
     if not paths:
         raise FileNotFoundError(f"No .txt episodes in {show_dir}")
-    eps = [parse_episode(p) for p in paths]
+    return _finish([parse_episode(p) for p in paths])
+
+
+def load_texts(files: list[tuple[str, str]]) -> list[Episode]:
+    """Episodes from in-memory (filename, text) pairs, e.g. browser uploads.
+    Pasted scripts without an 'episode-NNN' filename fall back to the EPISODE NUMBER header,
+    then to upload order."""
+    eps = []
+    for i, (name, text) in enumerate(sorted(files, key=lambda f: f[0])):
+        ep = parse_episode(Path(name), text)
+        if ep.num == 0:
+            ep.num = i + 1
+        eps.append(ep)
+    seen = set()
+    for e in sorted(eps, key=lambda e: e.num):   # keep episode numbers unique
+        while e.num in seen:
+            e.num += 1000
+        seen.add(e.num)
+        for c in e.cues:                          # cue IDs embed the episode number
+            c.episode, c.cue_id = e.num, f"E{e.num:02d}-C{c.idx:03d}"
+    return _finish(eps)
+
+
+def _finish(eps: list[Episode]) -> list[Episode]:
     if not any(e.cues for e in eps):
         raise ValueError("no timestamped cues found: expected '**CAMERA:**' / '**NAME (Emotion):**' blocks "
                          "followed by 'Start: (mm:ss.xx) | End: (mm:ss.xx)'")

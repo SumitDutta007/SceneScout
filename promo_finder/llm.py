@@ -26,7 +26,7 @@ from . import signals as sg
 DEFAULT_MODELS = {"claude": "claude-opus-5-5", "gemini": "gemini-3.5-flash"}  # flash-latest / 3.8 hung in testing (2026-11-08)
 PROVIDER = "claude"
 MODEL = DEFAULT_MODELS["claude"]
-CACHE_DIR = Path(".cache")
+CACHE_DIR = Path(os.environ.get("PROMO_CACHE_DIR", ".cache"))   # web: /tmp (read-only elsewhere)
 # $ per million tokens (input, output, cache read, cache write) for cost reporting.
 # Gemini free-tier calls cost $0; paid-tier prices vary by model, so they are not estimated here.
 PRICES = {"claude-opus-5-5": (4.0, 20.0, 0.20, 5.0), "claude-sonnet-5-5": (2.0, 10.0, 0.20, 2.5),
@@ -185,7 +185,10 @@ def _cand_block(cands: list[Promo]) -> str:
 def _call(system_static: str, user: str, schema: dict, effort: str = "high") -> dict:
     key = hashlib.sha256(json.dumps([PROVIDER, MODEL, effort, system_static, user, schema],
                                     sort_keys=True).encode()).hexdigest()[:24]
-    CACHE_DIR.mkdir(exist_ok=True)
+    try:
+        CACHE_DIR.mkdir(parents=True, exist_ok=True)
+    except OSError:
+        pass
     cpath = CACHE_DIR / f"{key}.json"
     if cpath.exists():
         USAGE["cached_calls"] += 1
@@ -195,7 +198,10 @@ def _call(system_static: str, user: str, schema: dict, effort: str = "high") -> 
     USAGE["calls"] += 1
     for k, v in rec.items():
         USAGE[k] += v
-    cpath.write_text(json.dumps({"usage": rec, "data": data}, indent=1), encoding="utf-8")
+    try:
+        cpath.write_text(json.dumps({"usage": rec, "data": data}, indent=1), encoding="utf-8")
+    except OSError:
+        pass
     return data
 
 
@@ -216,7 +222,39 @@ def _gemini_schema(s):
     return s
 
 
+class QuotaExhausted(RuntimeError):
+    pass
+
+
+# Serverless knobs. The CLI waits patiently; a web function must finish inside its time limit.
+DEADLINE: float | None = None          # absolute epoch seconds; None = no deadline
+REQUEST_TIMEOUT = 180.0
+MAX_RETRY_DELAY = 300.0                # a longer "retry after" means a daily quota, not a per-minute one
+FALLBACK_MODELS = [m.strip() for m in os.environ.get("GEMINI_FALLBACK_MODELS", "").split(",") if m.strip()]
+
+
+def _time_left() -> float:
+    return float("inf") if DEADLINE is None else DEADLINE - time.time()
+
+
 def _gemini_call(system_static: str, user: str, schema: dict, effort: str) -> tuple[dict, dict]:
+    """Try the primary model, then each fallback model when a model's quota is exhausted."""
+    last: Exception | None = None
+    for model in [MODEL] + [m for m in FALLBACK_MODELS if m != MODEL]:
+        try:
+            return _gemini_once(model, system_static, user, schema)
+        except QuotaExhausted as e:
+            print(f"    {model}: quota exhausted, trying next model", flush=True)
+            last = e
+        except (RuntimeError, TimeoutError) as e:   # overloaded / timed out: another model may still answer
+            print(f"    {model}: {e}; trying next model", flush=True)
+            last = e
+            if _time_left() < 20:
+                break
+    raise last or RuntimeError("no Gemini model available")
+
+
+def _gemini_once(model: str, system_static: str, user: str, schema: dict) -> tuple[dict, dict]:
     import urllib.error
     import urllib.request
     body = json.dumps({
@@ -226,34 +264,38 @@ def _gemini_call(system_static: str, user: str, schema: dict, effort: str) -> tu
                              "responseSchema": _gemini_schema(schema),
                              "maxOutputTokens": 32000},
     }).encode()
-    url = GEMINI_URL.format(model=MODEL)
+    url = GEMINI_URL.format(model=model)
     for attempt in range(8):
         with _gemini_lock:
             wait = _gemini_last[0] + GEMINI_MIN_GAP - time.time()
             if wait > 0:
                 time.sleep(wait)
             _gemini_last[0] = time.time()
+        timeout = min(REQUEST_TIMEOUT, _time_left() - 1)
+        if timeout < 5:
+            raise TimeoutError("out of time for this request")
         req = urllib.request.Request(url, data=body, method="POST", headers={
             "Content-Type": "application/json", "X-goog-api-key": _gemini_key()})
         try:
-            resp = json.load(urllib.request.urlopen(req, timeout=180))
+            resp = json.load(urllib.request.urlopen(req, timeout=timeout))
             break
         except urllib.error.HTTPError as e:
             msg = e.read().decode("utf-8", "replace")
             if e.code in (429, 500, 503) and attempt < 7:
                 m = re.search(r'"retryDelay":\s*"(\d+)', msg)
                 delay = int(m.group(1)) + 1 if m else min(60, 5 * 2 ** attempt)
-                if delay > 300:   # a daily quota, not a per-minute one: fail now instead of sleeping for hours
+                if delay > MAX_RETRY_DELAY or "PerDay" in msg:
                     q = re.search(r'"quotaId":\s*"([^"]+)"', msg)
-                    raise RuntimeError(f"Gemini quota exhausted ({q.group(1) if q else 'daily'}); "
-                                       f"resets in ~{delay // 3600}h. Cached calls are kept, so re-run later "
-                                       "or pass a different --model.")
+                    raise QuotaExhausted(f"{model} quota exhausted ({q.group(1) if q else 'daily'}); "
+                                         f"retry in ~{delay // 60} min")
+                if delay > _time_left() - 10:
+                    raise TimeoutError(f"{model} rate-limited for {delay}s, past this request's time budget")
                 print(f"    gemini {e.code}, retry {attempt + 1} in {delay}s", flush=True)
                 time.sleep(delay)
                 continue
             raise RuntimeError(f"Gemini HTTP {e.code}: {msg[:300]}") from e
         except (urllib.error.URLError, TimeoutError) as e:
-            if attempt < 3:
+            if attempt < 3 and _time_left() > 30:
                 print(f"    gemini timeout/connection error, retry {attempt + 1}", flush=True)
                 time.sleep(5 * (attempt + 1)); continue
             raise RuntimeError(f"Gemini connection error: {e}") from e
@@ -356,45 +398,60 @@ def to_promo(item: dict, cue_index: dict, eps: dict[int, Episode]) -> tuple[Prom
 
 # ---------------------------------------------------------------- passes
 
+def validate_items(items: list[dict], eps: list[Episode], label: str = "", log=print) -> list[Promo]:
+    """Model output (cue-ID based) -> validated Promos. Anything that doesn't map onto the script is dropped."""
+    by_ep = {e.num: e for e in eps}
+    cue_index = {c.cue_id: c for e in eps for c in e.cues}
+    out = []
+    for item in items:
+        try:
+            p, why = to_promo(item, cue_index, by_ep)
+        except (KeyError, TypeError, ValueError) as e:
+            p, why = None, f"malformed item ({e})"
+        if p:
+            out.append(p)
+        else:
+            log(f"  - {label}: dropped LLM promo ({why})")
+    return out
+
+
+def judge_raw(eps: list[Episode], group: list[Episode], rule_cands: list[Promo], log=print) -> list[dict]:
+    """One judge call for `group` (a few episodes), with the whole show's bible as context.
+    Returns the model's raw cue-ID items; [] if the call fails."""
+    system = GUIDE + "\n\n" + series_bible(eps)
+    parts = []
+    for ep in group:
+        cands = [p for p in rule_cands if p.kind == "single" and p.segments[0].episode == ep.num][:6]
+        parts.append(f"{transcript(ep)}\n\nRULE-BASED CANDIDATES for episode {ep.num} (may be wrong):\n"
+                     f"{_cand_block(cands)}")
+    scope = ("THIS episode" if len(group) == 1 else
+             f"EACH of the {len(group)} episodes above (judge each episode separately; a promo's segments "
+             "must all come from one episode")
+    user = ("\n\n".join(parts) + "\n\n"
+            f"Task: propose the best 1-3 promos that can be cut from {scope}"
+            + (")" if len(group) > 1 else "") +
+            " (single continuous stretch, or 2-3 segments from the same episode in order). Refine candidate "
+            "boundaries where a better hook or a harder cliffhanger is a few cues away; reject weak candidates "
+            "with a reason (refer to them as '<episode>:C<n>'). Each promo must total 20-60s and its first 3s "
+            "must contain the hook. If an episode has nothing promo-worthy, propose nothing for it; don't "
+            "force it.")
+    label = f"ep {group[0].num}" + (f"-{group[-1].num}" if len(group) > 1 else "")
+    try:
+        return _call(system, user, JUDGE_SCHEMA).get("promos", [])
+    except Exception as e:  # noqa: BLE001
+        log(f"  ! {label}: {e}")
+        return []
+
+
 def judge_episodes(eps: list[Episode], rule_cands: list[Promo], workers: int = 6, log=print,
                    per_call: int = 1) -> list[Promo]:
     """Judge episodes in groups of `per_call`. One episode per call gives the model the most attention per
     episode; 5 per call cuts the call count ~5x (needed on rate-limited free tiers, cheaper at scale)."""
-    by_ep = {e.num: e for e in eps}
-    cue_index = {c.cue_id: c for e in eps for c in e.cues}
-    system = GUIDE + "\n\n" + series_bible(eps)
     groups = [eps[i:i + per_call] for i in range(0, len(eps), per_call)]
 
     def one(group: list[Episode]) -> list[Promo]:
-        parts = []
-        for ep in group:
-            cands = [p for p in rule_cands if p.kind == "single" and p.segments[0].episode == ep.num][:6]
-            parts.append(f"{transcript(ep)}\n\nRULE-BASED CANDIDATES for episode {ep.num} (may be wrong):\n"
-                         f"{_cand_block(cands)}")
-        scope = ("THIS episode" if len(group) == 1 else
-                 f"EACH of the {len(group)} episodes above (judge each episode separately; a promo's segments "
-                 "must all come from one episode")
-        user = ("\n\n".join(parts) + "\n\n"
-                f"Task: propose the best 1-3 promos that can be cut from {scope}"
-                + (")" if len(group) > 1 else "") +
-                " (single continuous stretch, or 2-3 segments from the same episode in order). Refine candidate "
-                "boundaries where a better hook or a harder cliffhanger is a few cues away; reject weak candidates "
-                "with a reason (refer to them as '<episode>:C<n>'). Each promo must total 20-60s and its first 3s "
-                "must contain the hook. If an episode has nothing promo-worthy, propose nothing for it; don't "
-                "force it.")
         label = f"ep {group[0].num}" + (f"-{group[-1].num}" if len(group) > 1 else "")
-        try:
-            data = _call(system, user, JUDGE_SCHEMA)
-        except Exception as e:  # noqa: BLE001
-            log(f"  ! {label}: {e}")
-            return []
-        out = []
-        for item in data.get("promos", []):
-            p, why = to_promo(item, cue_index, by_ep)
-            if p:
-                out.append(p)
-            else:
-                log(f"  - {label}: dropped LLM promo ({why})")
+        out = validate_items(judge_raw(eps, group, rule_cands, log), eps, label, log)
         log(f"  {label}: {len(out)} promos")
         return out
 
@@ -405,9 +462,8 @@ def judge_episodes(eps: list[Episode], rule_cands: list[Promo], workers: int = 6
     return results
 
 
-def stitch_pass(eps: list[Episode], moments: list[Promo], n: int = 8, log=print) -> list[Promo]:
+def stitch_raw(eps: list[Episode], moments: list[Promo], n: int = 8, log=print) -> list[dict]:
     by_ep = {e.num: e for e in eps}
-    cue_index = {c.cue_id: c for e in eps for c in e.cues}
     system = GUIDE + "\n\n" + series_bible(eps)
     blocks = []
     for p in moments:
@@ -417,23 +473,19 @@ def stitch_pass(eps: list[Episode], moments: list[Promo], n: int = 8, log=print)
     user = ("Below are the strongest moments found in each episode (script excerpts with cue IDs).\n\n"
             + "\n\n".join(dict.fromkeys(blocks)) +
             f"\n\nTask: build up to {n} MULTI-SEGMENT promos (2-3 segments, can cross episodes, story order, total "
-            "20-60s) that do something no single stretch can, e.g. compress setup→twist (humiliation → the "
-            "stranger's proposal), abuse → protector arrives, accusation → reveal. Use only cue IDs shown above. "
-            "Avoid joins that would visibly break continuity (wedding gown in one shot, peasant clothes the next) "
-            "unless the jump IS the story. Put an empty list in rejected_candidates.")
+            "20-60s) that do something no single stretch can, e.g. compress setup→twist (humiliation → reversal), "
+            "abuse → protector arrives, accusation → reveal. Use only cue IDs shown above. "
+            "Avoid joins that would visibly break continuity (costume, injuries or location changing between "
+            "shots) unless the jump IS the story. Put an empty list in rejected_candidates.")
     try:
-        data = _call(system, user, JUDGE_SCHEMA)
+        return _call(system, user, JUDGE_SCHEMA).get("promos", [])
     except Exception as e:  # noqa: BLE001
         log(f"  ! stitch pass: {e}")
         return []
-    out = []
-    for item in data.get("promos", []):
-        p, why = to_promo(item, cue_index, by_ep)
-        if p:
-            out.append(p)
-        else:
-            log(f"  - stitch: dropped LLM promo ({why})")
-    return out
+
+
+def stitch_pass(eps: list[Episode], moments: list[Promo], n: int = 8, log=print) -> list[Promo]:
+    return validate_items(stitch_raw(eps, moments, n, log), eps, "stitch", log)
 
 
 def rank_pass(eps: list[Episode], promos: list[Promo], log=print) -> dict:

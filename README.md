@@ -43,6 +43,15 @@ Output goes to `out/` (`all_candidates.json` and the console log are included in
 
 **LLM providers.** The AI layer is one function (`llm._call`), so it is provider-agnostic.
 - **Gemini (free tier, used for the committed hybrid run):** put `GEMINI_API_KEY=...` in a `.env` file in the project root (git-ignored), then run `--mode hybrid --provider gemini`. It uses the standard library only, with no extra install. Calls are spaced about 6.5s apart for the free tier's rate limit, and 429s are retried. Note that Google may use free-tier inputs to improve its products; production should use a paid tier.
-- **Claude:** `pip install -r requirements.txt`, set `ANTHROPIC_API_KEY` (or `ant auth login`), and use `--mode hybrid`. It makes about 52 calls per show. The cost is not measured yet; the estimate is a few dollars per 50-episode show.
+- **Claude:** `pip install anthropic`, set `ANTHROPIC_API_KEY` (or `ant auth login`), and use `--mode hybrid`. With one episode per call it makes about 52 calls per show; `--episodes-per-call 5` cuts that to 12. Measured token use is printed after each run.
 
 See **ANALYSIS.md** for the results on *I Married a Broken Soldier. He was a Duke*, the posting order, and where the tool picks badly.
+
+## Deploy (Vercel)
+
+The repo deploys as-is. `index.html` is the landing page, the pre-computed results under `raw_outputs/` are static pages, and `api/run.py` is a Python function. It takes uploaded episode `.txt` files and runs the **rules engine** live (about 6s for 50 episodes). `.vercelignore` keeps `.env`, `data/` and caches out of the upload.
+
+- **Dashboard:** push to GitHub → vercel.com → *Add New Project* → import the repo → Framework preset **Other** → Deploy. No environment variables are needed.
+- **CLI:** `npx vercel login` then `npx vercel --prod` from the repo root.
+
+The LLM pass is deliberately not exposed on the public site. It takes minutes per show (past a serverless timeout), and a public endpoint would let anyone spend the API key's quota. Run it from the CLI and commit the output.

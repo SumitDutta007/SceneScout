@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Promo Finder</title>
+<style>
+:root{--bg:#0f1115;--card:#171a21;--line:#262a33;--fg:#e7e9ee;--mut:#9aa1ad;--acc:#7aa2ff;--ok:#34d399;--err:#f87171}
+*{box-sizing:border-box}body{margin:0;font:15px/1.5 system-ui,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--fg)}
+main{max-width:920px;margin:0 auto;padding:28px 20px 60px}
+h1{margin:0 0 4px;font-size:26px}h2{font-size:17px;margin:0 0 10px}.mut{color:var(--mut)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px 20px;margin-top:16px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px}
+a.tile{display:block;padding:14px 16px;border:1px solid var(--line);border-radius:10px;color:var(--fg);text-decoration:none}
+a.tile:hover{border-color:var(--acc)}a.tile b{display:block;color:var(--acc)}
+button,input,select{font:inherit;background:#0f1115;color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:8px 12px}
+button{background:var(--acc);color:#0b0d12;border:0;font-weight:600;cursor:pointer}button:disabled{opacity:.5;cursor:wait}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:10px 0}
+#status{margin-top:8px}.ok{color:var(--ok)}.err{color:var(--err)}
+iframe{width:100%;height:80vh;border:1px solid var(--line);border-radius:10px;margin-top:14px;background:#0f1115}
+code{background:#0f1115;padding:1px 5px;border-radius:4px}
+</style></head><body><main>
+<h1>Promo Finder</h1>
+<div class="mut">Reads a microdrama screenplay and finds 20–60s promo clips: the episode and timestamps for each segment, the hook in the first 3s, the cliffhanger at the cut, and why it works. Ranked in posting order.</div>
+
+<div class="card">
+<h2>Results on <i>I Married a Broken Soldier. He was a Duke</i> (50 episodes)</h2>
+<div class="grid">
+<a class="tile" href="/raw_outputs/hybrid_gemini/viewer.html"><b>Hybrid run: rules + Gemini →</b><span class="mut">12 LLM calls, 2.5 min. The LLM judges every episode.</span></a>
+<a class="tile" href="/raw_outputs/rules_only/viewer.html"><b>Rules-only run →</b><span class="mut">4 seconds, no LLM.</span></a>
+<a class="tile" href="/docs/solution.pdf"><b>Solution doc (PDF) →</b><span class="mut">Approach, scale, cost, evaluation, failures.</span></a>
+<a class="tile" href="/raw_outputs/eval_vs_my_picks.json"><b>Evaluation (JSON) →</b><span class="mut">Both runs against 12 moments picked in advance.</span></a>
+</div>
+</div>
+
+<div class="card">
+<h2>Run it on your own scripts (live, rules engine)</h2>
+<div class="mut">Choose a show's episode <code>.txt</code> files (same format as the input pack). They are processed in memory and not stored. The LLM pass isn't run live: it takes minutes and needs a rate-limited API key. Run it from the CLI (<code>--mode hybrid</code>).</div>
+<div class="row">
+  <input id="files" type="file" accept=".txt" multiple>
+  <label class="mut"><input id="folder" type="checkbox"> pick a whole folder</label>
+  <label class="mut">Top <input id="top" type="number" value="15" min="1" max="30" style="width:70px"></label>
+  <button id="go">Find promos</button>
+</div>
+<div id="status" class="mut"></div>
+<div class="row" id="dl" style="display:none">
+  <a id="open" class="tile" style="padding:8px 12px" target="_blank">Open viewer in new tab ↗</a>
+  <a id="json" class="tile" style="padding:8px 12px" download="promos.json">Download promos.json</a>
+</div>
+<iframe id="out" style="display:none" title="Results"></iframe>
+</div>
+
+<div class="mut" style="margin-top:18px">Source, run steps and raw outputs: see the repository README.</div>
+</main>
+<script>
+const $ = s => document.querySelector(s);
+$('#folder').addEventListener('change', e => { $('#files').webkitdirectory = e.target.checked; });
+$('#go').addEventListener('click', async () => {
+  const fl = [...$('#files').files].filter(f => f.name.toLowerCase().endsWith('.txt'));
+  if (!fl.length) { $('#status').innerHTML = '<span class="err">Choose at least one episode .txt file.</span>'; return; }
+  const show = (fl[0].webkitRelativePath || '').split('/')[0] || 'Uploaded show';
+  $('#go').disabled = true; $('#status').textContent = `Reading ${fl.length} files…`;
+  try {
+    const files = await Promise.all(fl.map(async f => ({ name: f.name, text: await f.text() })));
+    $('#status').textContent = `Finding promos in ${files.length} episodes…`;
+    const t = performance.now();
+    const r = await fetch('/api/run', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ show, top: +$('#top').value || 15, files }) });
+    const data = await r.json().catch(() => ({ ok: false, error: `HTTP ${r.status}` }));
+    if (!data.ok) throw new Error(data.error + (data.log ? '\n' + data.log : ''));
+    const n = data.promos.promos.length;
+    $('#status').innerHTML = `<span class="ok">Found ${n} promos in ${((performance.now() - t) / 1000).toFixed(1)}s.</span>`;
+    const url = URL.createObjectURL(new Blob([data.viewer_html], { type: 'text/html' }));
+    $('#out').src = url; $('#out').style.display = 'block';
+    $('#open').href = url;
+    $('#json').href = URL.createObjectURL(new Blob([JSON.stringify(data.promos, null, 2)], { type: 'application/json' }));
+    $('#dl').style.display = 'flex';
+  } catch (e) {
+    $('#status').innerHTML = '<span class="err"></span>'; $('#status').firstChild.textContent = 'Error: ' + e.message;
+  } finally { $('#go').disabled = false; }
+});
+</script>
+</body></html>

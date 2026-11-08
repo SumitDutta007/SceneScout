@@ -206,4 +206,8 @@ def load_show(show_dir: str | Path) -> list[Episode]:
     if not paths:
         raise FileNotFoundError(f"No .txt episodes in {show_dir}")
     eps = [parse_episode(p) for p in paths]
+    if not any(e.cues for e in eps):
+        raise ValueError("no timestamped cues found: expected '**CAMERA:**' / '**NAME (Emotion):**' blocks "
+                         "followed by 'Start: (mm:ss.xx) | End: (mm:ss.xx)'")
+    eps = [e for e in eps if e.cues]
     return sorted(eps, key=lambda e: e.num)

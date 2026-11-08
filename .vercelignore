@@ -1,0 +1,11 @@
+# never upload secrets, the input pack, caches or local state
+.env
+data/
+.cache/
+out/
+.claude/
+.vscode/
+.pytest_cache/
+**/__pycache__/
+tests/
+eval/

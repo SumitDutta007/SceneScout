@@ -53,7 +53,7 @@ The deployed app is one page: upload scripts (files, a folder, drag-and-drop or 
 
 - `public/index.html` is the page. Only `public/` is served statically, so no source, data or outputs are exposed.
 - `api/judge.py`, `api/stitch.py` and `api/finalize.py` are three short serverless phases (`promo_finder/web.py`). The browser drives them, judging 5 episodes per call, 3 calls in parallel, so no single function runs past the time limit. The server keeps no state: every phase re-parses the uploaded scripts and re-validates model output against them.
-- If the model is unavailable (no key, quota, overload), each phase falls back to the next model, then to the rule engine. The user still gets a result, and the details go only to the server log.
+- If the model is unavailable (no key, quota, overload), each phase falls back to the next model, then to the rule engine. The user still gets a result, and the details go only to the server log
 
 **Setup:** in Vercel, open *Project → Settings → Environment Variables* and add `GEMINI_API_KEY`, then redeploy. Optional settings:
 - `PROMO_MODEL` (default `gemini-3-flash-preview`)

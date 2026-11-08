@@ -2,7 +2,10 @@
 
 Reads a microdrama screenplay (one timestamped `.txt` per episode) and returns ranked promo clips. Each promo is 20–60s long, made of one or more segments, opens on a hook in the first 3 seconds, ends on a cliffhanger and should make sense to a viewer who has never seen the show. For every promo you get the episode, start and end per segment, the hook, the cliffhanger, a one-line reason, a posting order and quality flags.
 
-**No time to run it?** The unedited output of a full run is committed in [`raw_outputs/rules_only/`](raw_outputs/rules_only/). Open `viewer.html` in a browser.
+**No time to run it?** The unedited outputs of two full runs on all 50 episodes are committed. Open `viewer.html` in either folder in a browser.
+- [`raw_outputs/hybrid_gemini/`](raw_outputs/hybrid_gemini/): rules + Gemini 3 Flash (12 calls, 2.5 min, free tier)
+- [`raw_outputs/rules_only/`](raw_outputs/rules_only/): rules only (4s, no LLM)
+- [`raw_outputs/eval_vs_my_picks.json`](raw_outputs/eval_vs_my_picks.json): both runs scored against 12 moments picked in advance. Results are in [ANALYSIS.md](ANALYSIS.md) §4.
 
 ## Run it
 

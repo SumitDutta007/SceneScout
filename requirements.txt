@@ -1,2 +1,0 @@
-# The deployed function (api/run.py) needs no packages: rules mode is stdlib-only.
-# For the optional Claude provider locally: pip install anthropic

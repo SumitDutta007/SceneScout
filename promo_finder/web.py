@@ -116,31 +116,43 @@ def finalize(payload: dict) -> dict:
 
 
 # ---------------------------------------------------------------- HTTP
+# Vercel discovers Python functions by a literal top-level `class handler(BaseHTTPRequestHandler)` in each
+# api/*.py file, so those files define the class themselves and delegate to these helpers.
+
+def send_json(req: BaseHTTPRequestHandler, code: int, obj: dict) -> None:
+    body = json.dumps(obj, ensure_ascii=False).encode("utf-8")
+    req.send_response(code)
+    req.send_header("Content-Type", "application/json; charset=utf-8")
+    req.send_header("Cache-Control", "no-store")
+    req.send_header("Content-Length", str(len(body)))
+    req.end_headers()
+    req.wfile.write(body)
+
+
+def serve_get(req: BaseHTTPRequestHandler) -> None:
+    send_json(req, 405, {"ok": False, "error": "POST only"})
+
+
+def serve_post(req: BaseHTTPRequestHandler, phase) -> None:
+    n = int(req.headers.get("content-length") or 0)
+    if n <= 0 or n > MAX_BODY:
+        return send_json(req, 413, {"ok": False, "error": "Upload is too large (max ~4 MB of scripts per show)."})
+    try:
+        payload = json.loads(req.rfile.read(n))
+        return send_json(req, 200, {"ok": True, **phase(payload)})
+    except ValueError as e:
+        return send_json(req, 400, {"ok": False, "error": str(e)})
+    except Exception as e:  # noqa: BLE001
+        _log(f"{phase.__name__} failed: {type(e).__name__}: {e}")
+        return send_json(req, 500, {"ok": False, "error": "Something went wrong while analysing the scripts."})
+
 
 def make_handler(phase):
+    """Handler class for local servers/tests (Vercel uses the literal classes in api/*.py)."""
     class handler(BaseHTTPRequestHandler):
-        def _send(self, code: int, obj: dict) -> None:
-            body = json.dumps(obj, ensure_ascii=False).encode("utf-8")
-            self.send_response(code)
-            self.send_header("Content-Type", "application/json; charset=utf-8")
-            self.send_header("Cache-Control", "no-store")
-            self.send_header("Content-Length", str(len(body)))
-            self.end_headers()
-            self.wfile.write(body)
-
         def do_GET(self):
-            self._send(405, {"ok": False, "error": "POST only"})
+            serve_get(self)
 
         def do_POST(self):
-            n = int(self.headers.get("content-length") or 0)
-            if n <= 0 or n > MAX_BODY:
-                return self._send(413, {"ok": False, "error": "Upload is too large (max ~4 MB of scripts per show)."})
-            try:
-                payload = json.loads(self.rfile.read(n))
-                return self._send(200, {"ok": True, **phase(payload)})
-            except ValueError as e:
-                return self._send(400, {"ok": False, "error": str(e)})
-            except Exception as e:  # noqa: BLE001
-                _log(f"{phase.__name__} failed: {type(e).__name__}: {e}")
-                return self._send(500, {"ok": False, "error": "Something went wrong while analysing the scripts."})
+            serve_post(self, phase)
     return handler
